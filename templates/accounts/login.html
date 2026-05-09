@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="min-height: 50vh; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+    <div class="ml-spinner" style="border-color:#e2e8f0;border-top-color:#8b5cf6;width:40px;height:40px;border-width:3px;margin-bottom:20px;"></div>
+    <h3 style="color: #1b4332; font-weight: 700;">Opening Login...</h3>
+</div>
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        if (typeof openLoginModal === 'function') {
+            openLoginModal();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,2134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grodiur - Fresh Groceries Daily</title>
+    
+    <!-- Theme Initialization: Prevents flickering -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark-theme');
+            }
+        })();
+    </script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { 
+            font-family: 'Poppins', sans-serif; 
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        :root { 
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-sec: #64748b;
+            --border-color: #f1f5f9;
+            --input-bg: #f0f7f4;
+            --navbar-bg: #0c831f;
+            --navbar-text: #ffffff;
+            --green: #2d6a4f; 
+            --green-light: #52b788; 
+            --green-dark: #1b4332; 
+            --accent: #f4a261; 
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        /* Apply variables based on dark-theme class */
+        .dark-theme, body.dark-theme {
+            --bg-color: #0f1115;
+            --card-bg: #171923;
+            --text-main: #f3f4f6;
+            --text-sec: #9ca3af;
+            --border-color: #2a2f3a;
+            --input-bg: #1f2937;
+            --navbar-bg: #111827;
+            --navbar-text: #f3f4f6;
+            --card-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        }
+
+        body { background: var(--bg-color); color: var(--text-main); }
+        .navbar { background: var(--navbar-bg) !important; padding: 16px 0; border-bottom: 1px solid var(--border-color); }
+        .navbar-brand { font-weight: 800; font-size: 1.8rem; letter-spacing: -1px; }
+        .navbar-brand .grod { color: #ffffff; }
+        .navbar-brand .iur { color: #ffc107; }
+        .nav-btn { border-radius: 25px !important; padding: 7px 18px !important; font-weight: 500 !important; font-size: 0.85rem !important; transition: all 0.3s ease !important; }
+        .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .nav-btn-outline { border: 2px solid rgba(255,255,255,0.5) !important; color: white !important; background: transparent !important; }
+        .nav-btn-outline:hover { background: rgba(255,255,255,0.15) !important; }
+        .nav-btn-solid { background: #f4a261 !important; border: none !important; color: white !important; }
+        .nav-btn-solid:hover { background: #e76f51 !important; }
+        .cart-badge { position: absolute; top: -6px; right: -6px; background: #e63946; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .alert { border-radius: 12px; border: none; font-weight: 500; }
+        .grodiur-card { background: var(--card-bg) !important; border-radius: 16px !important; border: 1px solid var(--border-color) !important; box-shadow: var(--card-shadow) !important; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important; }
+        .grodiur-card:hover { transform: translateY(-4px) !important; box-shadow: 0 12px 35px rgba(0,0,0,0.2) !important; }
+        .btn-grodiur { background: linear-gradient(135deg, #2d6a4f, #52b788) !important; border: none !important; border-radius: 25px !important; color: white !important; font-weight: 600 !important; padding: 10px 24px !important; transition: all 0.3s ease !important; }
+        .btn-grodiur:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(45,106,79,0.4) !important; }
+        .btn-grodiur-outline { border: 2px solid #2d6a4f !important; color: #2d6a4f !important; border-radius: 25px !important; font-weight: 600 !important; background: transparent !important; padding: 10px 24px !important; transition: all 0.3s ease !important; }
+        .btn-grodiur-outline:hover { background: #2d6a4f !important; color: white !important; transform: translateY(-2px) !important; }
+
+        footer { background: linear-gradient(135deg, #1b4332, #2d6a4f); color: white; margin-top: 60px; padding: 40px 0 20px; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
+        @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+        .fade-in-up { animation: fadeInUp 0.6s ease forwards; }
+        .float-anim { animation: float 3s ease-in-out infinite; }
+        #chat-toggle { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #2d6a4f, #52b788); border: none; color: white; font-size: 1.5rem; box-shadow: 0 6px 20px rgba(45,106,79,0.4); cursor: pointer; transition: all 0.3s ease; }
+        #chat-toggle:hover { transform: scale(1.1); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #2d6a4f; border-radius: 3px; }
+
+        .modal-blur { backdrop-filter: blur(8px); }
+        .fade-in { animation: fadeIn 0.2s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        @media print {
+            .no-print { display: none !important; }
+            .print-exact { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+
+        /* ── LOGIN MODAL ── */
+        #login-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 9998;
+            backdrop-filter: blur(6px);
+        }
+        #login-modal {
+            display: none; position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999; width: 95%; max-width: 880px;
+            border-radius: 24px; overflow: hidden;
+            box-shadow: 0 40px 120px rgba(0,0,0,0.35);
+        }
+        @keyframes modalIn {
+            from { opacity:0; transform:translate(-50%,-47%); }
+            to   { opacity:1; transform:translate(-50%,-50%); }
+        }
+        #login-modal.show { animation: modalIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+
+        /* Left panel */
+        .ml-left {
+            background:linear-gradient(160deg,#0b2119 0%,#1b4332 45%,#2d6a4f 100%);
+            padding:56px 48px;
+            display:flex;flex-direction:column;justify-content:space-between;
+            position:relative;overflow:hidden;min-height:600px;
+        }
+        .ml-left::before {
+            content:'';position:absolute;width:380px;height:380px;border-radius:50%;
+            background:radial-gradient(circle,rgba(82,183,136,0.25) 0%,transparent 65%);
+            top:-100px;left:-100px;pointer-events:none;
+        }
+        .ml-left::after {
+            content:'';position:absolute;width:300px;height:300px;border-radius:50%;
+            background:radial-gradient(circle,rgba(149,213,178,0.15) 0%,transparent 65%);
+            bottom:-80px;right:-60px;pointer-events:none;
+        }
+        .ml-brand {
+            display:flex;align-items:center;justify-content:center;gap:12px;
+            position:relative;z-index:1;
+        }
+        .ml-brand-icon {
+            width:40px;height:40px;border-radius:12px;
+            background:linear-gradient(135deg,#52b788,#95d5b2);
+            display:flex;align-items:center;justify-content:center;
+            font-size:20px;flex-shrink:0;
+        }
+        .ml-brand-name {
+            font-size:24px;font-weight:800;
+            color: white;
+            letter-spacing:-0.5px;
+        }
+        .ml-center {
+            position:relative;z-index:1;text-align:center;
+        }
+        .ml-pill {
+            display:inline-flex;align-items:center;gap:8px;
+            background:rgba(82,183,136,0.15);border:1px solid rgba(82,183,136,0.3);
+            border-radius:100px;padding:7px 16px;
+            font-size:11.5px;color:#95d5b2;font-weight:600;
+            letter-spacing:0.3px;margin-bottom:22px;
+        }
+        .ml-pill svg { width:13px;height:13px;stroke:#52b788;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0; }
+        .ml-heading {
+            font-size:33px;font-weight:800;color:#fff;
+            line-height:1.18;letter-spacing:-0.8px;margin-bottom:12px;
+        }
+        .ml-heading span {
+            color:#52b788;
+        }
+        .ml-sub {
+            font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;
+        }
+        .ml-feats {
+            display:grid;grid-template-columns:1fr 1fr;gap:12px;
+            position:relative;z-index:1;
+        }
+        .ml-feat {
+            background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);
+            border-radius:16px;padding:18px 14px;
+            display:flex;flex-direction:column;align-items:center;gap:10px;
+            transition:border-color 0.25s,background 0.25s;cursor:default;
+        }
+        .ml-feat:hover { border-color:rgba(82,183,136,0.4);background:rgba(45,106,79,0.15); }
+        .ml-feat-icon {
+            width:42px;height:42px;border-radius:12px;
+            background:linear-gradient(135deg,rgba(45,106,79,0.5),rgba(82,183,136,0.2));
+            display:flex;align-items:center;justify-content:center;
+        }
+        .ml-feat-icon svg { width:18px;height:18px;stroke:#52b788;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round; }
+        .ml-feat-label {
+            font-size:12px;font-weight:700;color:#b7e4c7;letter-spacing:0.1px;
+        }
+
+        /* Right panel */
+        .ml-right {
+            background: var(--card-bg); color: var(--text-main); padding: 40px 38px;
+            display:flex; flex-direction:column; justify-content:center;
+            position:relative;
+        }
+        .ml-close {
+            position:absolute; top:14px; right:14px;
+            background:rgba(0,0,0,0.07); border:none;
+            width:32px; height:32px; border-radius:50%;
+            font-size:14px; cursor:pointer; line-height:1;
+            transition:all 0.2s;
+        }
+        .ml-close:hover { background:rgba(220,53,69,0.1); color:#dc3545; transform:scale(1.1); }
+        .ml-step { display:none; flex-direction:column; animation:stepIn 0.3s ease both; }
+        .ml-step.active { display:flex; }
+        @keyframes stepIn { from{opacity:0;transform:translateX(14px);}to{opacity:1;transform:translateX(0);} }
+        .ml-h1 { font-size:26px; font-weight:800; color:var(--text-main); letter-spacing:-0.6px; margin-bottom:4px; }
+        .ml-sub2 { font-size:13px; color:var(--text-sec); margin-bottom:20px; line-height:1.5; }
+
+        /* Tab toggle */
+        .ml-tabs { display:flex; background:var(--input-bg); border-radius:12px; padding:4px; margin-bottom:18px; }
+        .ml-tab {
+            flex:1; padding:10px; border:none; border-radius:10px;
+            font-weight:600; font-size:13px; cursor:pointer;
+            transition:all 0.3s; background:transparent; color:var(--text-sec);
+            font-family:'Poppins',sans-serif;
+        }
+        .ml-tab.active {
+            background: var(--green);
+            color:white; box-shadow:0 4px 12px rgba(45,106,79,0.3);
+        }
+
+        /* Input */
+        .ml-inp-wrap { position:relative; margin-bottom:14px; }
+        .ml-inp {
+            width:100%; padding:14px 16px 14px 46px;
+            background:var(--input-bg); border:1.5px solid var(--border-color);
+            border-radius:14px; font-size:14px; color:var(--text-main);
+            outline:none; font-family:'Poppins',sans-serif;
+            transition:all 0.25s;
+        }
+        .ml-inp:focus { border-color:var(--green); background:var(--card-bg); box-shadow:0 0 0 4px rgba(45,106,79,0.1); }
+        .ml-inp-icon { position:absolute; left:15px; top:50%; transform:translateY(-50%); font-size:17px; pointer-events:none; }
+
+        /* Buttons */
+        .ml-btn {
+            width:100%; padding:14.5px;
+            background: #c084fc; /* light purple */
+            border:none; border-radius:12px; color:#fff;
+            font-size:15px; font-weight:600; cursor:pointer;
+            font-family:'Poppins',sans-serif;
+            transition:all 0.3s; margin-bottom:14px;
+            display:flex; align-items:center; justify-content:center; gap:8px;
+        }
+        .ml-btn:hover:not(:disabled) { background:#a855f7; transform:translateY(-1px); box-shadow:0 6px 16px rgba(168,85,247,0.3); }
+        .ml-btn:disabled { opacity:0.7; cursor:not-allowed; }
+        .ml-btn-google {
+            width:100%; padding:13px;
+            background:var(--card-bg); border:1.5px solid var(--border-color);
+            border-radius:14px; font-size:14px; font-weight:500; color:var(--text-main);
+            cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;
+            font-family:'Poppins',sans-serif; transition:all 0.2s;
+        }
+        .ml-btn-google:hover { border-color:var(--green); box-shadow:var(--card-shadow); }
+        .ml-divider { display:flex; align-items:center; gap:12px; margin:14px 0; }
+        .ml-divider::before,.ml-divider::after { content:''; flex:1; height:1px; background:var(--border-color); }
+        .ml-divider span { font-size:12px; color:var(--text-sec); }
+
+        /* OTP boxes - FIXED */
+        .ml-otp-grid {
+            display:grid; grid-template-columns:repeat(6,1fr);
+            gap:8px; margin:18px 0;
+        }
+        .ml-otp-box {
+            height:56px; width:100%;
+            background:var(--input-bg); border:2px solid var(--border-color);
+            border-radius:14px; color:var(--text-main);
+            font-size:24px; font-weight:800; text-align:center;
+            outline:none; font-family:'Poppins',sans-serif;
+            transition:all 0.2s;
+            box-sizing:border-box;
+        }
+        .ml-otp-box:focus { border-color:var(--green); background:var(--card-bg); box-shadow:var(--card-shadow); transform:scale(1.05); }
+        .ml-otp-box.filled { border-color:var(--green); background:rgba(45, 106, 79, 0.1); color:var(--text-main); }
+
+        /* Sent to tag */
+        .ml-sent-tag {
+            background:var(--input-bg); border:1px solid var(--border-color);
+            border-radius:10px; padding:10px 14px;
+            margin-bottom:14px; display:flex; align-items:center;
+            justify-content:space-between;
+        }
+        .ml-sent-tag span { font-size:13px; color:var(--text-main); font-weight:600; }
+        .ml-sent-tag button { background:none; border:none; color:var(--green); font-size:12px; font-weight:600; cursor:pointer; }
+
+        /* Timer & resend */
+        .ml-timer-wrap { text-align:center; margin-bottom:14px; }
+        .ml-timer { font-size:13px; color:#9dbfad; }
+        .ml-resend { font-size:13px; color:#2d6a4f; font-weight:700; background:none; border:none; cursor:pointer; font-family:'Poppins',sans-serif; text-decoration:underline; display:none; }
+
+        /* Messages */
+        .ml-err { display:none; background:#fff0f0; border:1px solid #ffcdd2; border-radius:10px; padding:10px 14px; font-size:13px; color:#c62828; margin-bottom:10px; font-weight:500; }
+        .ml-ok  { display:none; background:#f0f7f4; border:1px solid #a5d6a7; border-radius:10px; padding:10px 14px; font-size:13px; color:#2d6a4f; margin-bottom:10px; font-weight:500; }
+
+        /* Back btn */
+        .ml-back { background:none; border:none; color:#9dbfad; font-size:12px; cursor:pointer; font-family:'Poppins',sans-serif; margin-top:10px; transition:color 0.2s; }
+        .ml-back:hover { color:#2d6a4f; }
+
+        /* Spinner */
+        .ml-spinner { width:18px; height:18px; border:2.5px solid rgba(255,255,255,0.35); border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite; display:inline-block; }
+
+        /* Legal */
+        .ml-legal { font-size:11px; color:#b2d0c0; text-align:center; line-height:1.7; margin-top:16px; }
+        .ml-legal a { color:#2d6a4f; text-decoration:none; font-weight:600; }
+
+        /* Success toast */
+        .g-toast { position:fixed; top:80px; left:50%; transform:translateX(-50%); z-index:99999; padding:12px 20px; border-radius:12px; font-size:14px; font-weight:500; box-shadow:0 8px 25px rgba(0,0,0,0.1); animation:fadeInUp 0.4s ease; display:none; align-items:center; gap:8px; }
+        .g-toast.ok { background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; }
+        .g-toast.err { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; }
+
+        /* Order status styles */
+        .status-delivered { background:#e8f5e9; color:#2d6a4f; }
+        .status-shipped { background:#e3f2fd; color:#1565c0; }
+        .status-confirmed { background:#e8eaf6; color:#3949ab; }
+        .status-cancelled { background:#ffebee; color:#c62828; }
+        .status-pending { background:#fff8e1; color:#f57f17; }
+
+        /* Step styles */
+        .step-active { background:#2d6a4f; border-color:#2d6a4f; }
+        .step-pending { background:#fff3cd; border-color:#f57f17; }
+        .step-inactive { background:#f5f5f5; border-color:#e0e0e0; }
+        .step-text-active { font-weight:700; color:#1b4332; }
+        .step-text-inactive { font-weight:500; color:#9dbfad; }
+
+        /* ═══ GLOBAL INVOICE MODAL ═══ */
+        #global-invoice-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        .global-invoice-modal { background: white; width: 95%; max-width: 1000px; height: 90vh; border-radius: 24px; overflow: hidden; position: relative; box-shadow: 0 30px 100px rgba(0,0,0,0.5); display: flex; flex-direction: column; animation: modalFadeIn 0.3s ease; }
+        .global-invoice-close { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.05); border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #1e293b; cursor: pointer; z-index: 10; transition: all 0.2s; }
+        .global-invoice-close:hover { background: rgba(0,0,0,0.1); transform: scale(1.1); }
+        .global-invoice-iframe { flex: 1; border: none; width: 100%; }
+        @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        /* ═══ PROFESSIONAL PRINT OVERRIDES ═══ */
+        @media print {
+            /* 1. Force Colors */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            
+            /* 2. Hide Everything except Modal */
+            body > *:not(#global-invoice-overlay) { display: none !important; }
+            #global-invoice-overlay { display: block !important; position: absolute !important; inset: 0 !important; background: white !important; backdrop-filter: none !important; padding: 0 !important; }
+            #global-invoice-modal { width: 100% !important; max-width: 100% !important; height: auto !important; position: static !important; box-shadow: none !important; transform: none !important; border: 1px solid #e5e7eb !important; overflow: visible !important; }
+            
+            /* 3. Hide Buttons & Overlay background */
+            .global-invoice-close, .print-hide { display: none !important; }
+            
+            /* 4. Force Header Visibility */
+            #global-invoice-container .invoice-header-box { background: #15803d !important; border-bottom: none !important; }
+            
+            /* 5. Contrast and Layout */
+            body { background: white !important; }
+            #global-invoice-container { overflow: visible !important; height: auto !important; }
+            table { width: 100% !important; border-collapse: collapse !important; }
+            th { background: #f1f5f9 !important; border-bottom: 2px solid #e2e8f0 !important; }
+            td { border-bottom: 1px solid #f1f5f9 !important; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Toast -->
+<div id="g-toast" class="g-toast"></div>
+
+<!-- Main Navbar -->
+<nav style="background:var(--navbar-bg);padding:12px 0;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+    <div class="container">
+        <div style="display:flex;align-items:center;gap:16px;">
+
+            <!-- Logo -->
+            <a href="{% url 'home' %}" style="text-decoration:none;flex-shrink:0;" class="navbar-brand">
+                <span class="grod">Grod</span><span class="iur">iur</span>
+            </a>
+
+            <!-- Location -->
+            <button onclick="openLocationModal()" style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.15);border:none;border-radius:12px;padding:8px 16px;cursor:pointer;flex-shrink:0;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+                <div style="color:#ff4757;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                </div>
+                <div style="text-align:left;line-height:1.2;">
+                    <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:1px;">DELIVER TO</div>
+                    <div id="nav-location-area" style="font-size:14px;font-weight:800;color:#ffffff;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Set Location</div>
+                    <div id="nav-location-city" style="font-size:11px;font-weight:500;color:rgba(255,255,255,0.85);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Select Area</div>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e2e8f0" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+
+            <!-- Search bar -->
+            <form method="GET" action="{% url 'product_list' %}" style="flex:1;">
+                <div style="position:relative;">
+                    <svg style="position:absolute;left:14px;top:50%;transform:translateY(-50%);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-sec)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    <input type="text" name="q" placeholder="Search for groceries, fruits, vegetables..."
+                        style="width:100%;padding:11px 16px 11px 42px;border:none;border-radius:12px;font-size:14px;outline:none;font-family:'Poppins',sans-serif;background:var(--card-bg);color:var(--text-main);transition:all 0.2s;box-shadow:var(--card-shadow);"
+                        onfocus="this.style.boxShadow='0 0 0 3px rgba(255,255,255,0.2)'"
+                        onblur="this.style.boxShadow='var(--card-shadow)'"/>
+                </div>
+            </form>
+
+            <!-- Nav Links removed as requested -->
+
+            <!-- Right icons -->
+            <div style="display:flex;align-items:center;gap:20px;flex-shrink:0;margin-left:8px;">
+                {% if user.is_authenticated %}
+                    <!-- Account -->
+                    <a href="{% url 'profile' %}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px;text-decoration:none;color:#fff;transition:all 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <span style="font-size:11px;font-weight:600;color:#fff;">Account</span>
+                    </a>
+                    <!-- Cart -->
+                    <a href="{% url 'cart_detail' %}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px;text-decoration:none;color:#fff;position:relative;transition:all 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        <div style="position:relative;">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                            <span id="global-cart-count" style="position:absolute;top:-8px;right:-8px;background:#e63946;color:white;border-radius:50%;width:18px;height:18px;font-size:10px;display:{% if request.user.cart.get_total_items %}flex{% else %}none{% endif %};align-items:center;justify-content:center;font-weight:700;">
+                                {{ request.user.cart.get_total_items|default:0 }}
+                            </span>
+                        </div>
+                        <span style="font-size:11px;font-weight:600;color:#fff;">Cart</span>
+                    </a>
+
+                {% else %}
+                    <!-- Login Button -->
+                    <button onclick="openLoginModal()" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px;background:none;border:none;cursor:pointer;color:#fff;transition:all 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <span style="font-size:11px;font-weight:600;">Login</span>
+                    </button>
+
+                    <!-- Cart (redirect to login) -->
+                    <a href="#" onclick="openLoginModal(); return false;" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px;text-decoration:none;color:#fff;position:relative;transition:all 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        <div style="position:relative;">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                            <span id="global-cart-count-guest" style="position:absolute;top:-8px;right:-8px;background:#e63946;color:white;border-radius:50%;width:18px;height:18px;font-size:10px;display:{% if request.session.cart_items_count %}flex{% else %}none{% endif %};align-items:center;justify-content:center;font-weight:700;">
+                                {{ request.session.cart_items_count|default:0 }}
+                            </span>
+                        </div>
+                        <span style="font-size:11px;font-weight:600;color:#fff;">Cart</span>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Top announcement bar (moved below navbar) -->
+<div style="background:var(--bg-color);color:var(--text-sec);text-align:center;padding:8px;font-size:12px;font-weight:600;border-bottom:1px solid var(--border-color);letter-spacing:0.3px;">
+    <span style="color:#f97316;">⚡</span> Groceries in minutes · Free delivery above ₹199
+</div>
+
+<!-- Location Modal -->
+<div id="loc-overlay" onclick="closeLocationModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9990;backdrop-filter:blur(8px);"></div>
+<div id="loc-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--card-bg);border-radius:24px;padding:0;width:90%;max-width:440px;z-index:9991;box-shadow:0 30px 100px rgba(0,0,0,0.4);overflow:hidden;">
+    <!-- Modal Header -->
+    <div style="background:linear-gradient(135deg, #1b4332, #2d6a4f); padding:24px; color:white; display:flex; align-items:center; justify-content:between;">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:40px; height:40px; background:rgba(255,255,255,0.2); border-radius:12px; display:flex; align-items:center; justify-content:center;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div>
+                <h5 style="margin:0; font-weight:800; font-size:18px;">Select Location</h5>
+                <p style="margin:0; font-size:11px; opacity:0.8; font-weight:500;">For accurate delivery & offers</p>
+            </div>
+        </div>
+        <button onclick="closeLocationModal()" style="margin-left:auto; background:rgba(0,0,0,0.2); border:none; width:32px; height:32px; border-radius:50%; color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;">✕</button>
+    </div>
+
+    <div style="padding:28px;">
+        <!-- Current Location Display (If exists) -->
+        <div id="current-loc-info" style="display:none; margin-bottom:24px; padding:16px; background:var(--input-bg); border-radius:16px; border:1px solid var(--border-color);">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                <span id="gps-confirmed-badge" style="display:none; background:#dcfce7; color:#166534; padding:4px 10px; border-radius:100px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; border:1px solid #bbf7d0;">📍 GPS Confirmed</span>
+                <span id="manual-pincode-badge" style="display:none; background:#fef9c3; color:#854d0e; padding:4px 10px; border-radius:100px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; border:1px solid #fde68a;">Pincode Set</span>
+            </div>
+            <div id="full-addr-display" style="font-weight:800; font-size:16px; color:var(--text-main); margin-bottom:4px;">---</div>
+            <div id="full-city-display" style="font-size:13px; color:var(--text-sec); font-weight:500;">---</div>
+            <div style="margin-top:12px; display:flex; align-items:center; gap:6px; color:#16a34a; font-size:12px; font-weight:600;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Using live device location
+            </div>
+        </div>
+
+        <div style="margin-bottom:20px;">
+            <label style="font-size:11px; color:var(--text-sec); font-weight:700; margin-bottom:8px; display:block; text-transform:uppercase; letter-spacing:0.5px;">Enter 6-digit Pincode</label>
+            <div style="position:relative;">
+                <input id="pincode-inp" type="text" maxlength="6" placeholder="e.g. 560001"
+                    style="width:100%; padding:14px 16px; background:var(--input-bg); color:var(--text-main); border:1.5px solid var(--border-color); border-radius:14px; font-size:15px; outline:none; font-family:'Poppins',sans-serif; transition:all 0.2s;"
+                    onfocus="this.style.borderColor='var(--green)'; this.style.background='var(--card-bg)';" 
+                    onblur="this.style.borderColor='var(--border-color)'; this.style.background='var(--input-bg)';"
+                    oninput="handlePincodeInput(this)"
+                    onkeydown="if(event.key==='Enter')confirmPincode()"/>
+                <div id="pincode-loader" style="display:none; position:absolute; right:60px; top:50%; transform:translateY(-50%);">
+                    <div class="ml-spinner" style="width:16px; height:16px; border-width:2px; border-top-color:var(--green);"></div>
+                </div>
+                <button id="pincode-confirm-btn" onclick="confirmPincode()" disabled style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--green); color:white; border:none; border-radius:10px; padding:8px 16px; font-size:12px; font-weight:700; cursor:pointer; opacity:0.5; transition:0.3s;">Set</button>
+            </div>
+            <div id="pincode-status" style="font-size:11px; margin-top:6px; font-weight:600; display:none;"></div>
+        </div>
+        
+        <div style="display:flex; align-items:center; gap:12px; margin:24px 0;">
+            <div style="flex:1; height:1px; background:var(--border-color);"></div>
+            <span style="font-size:11px; color:var(--text-sec); font-weight:600; text-transform:uppercase;">or</span>
+            <div style="flex:1; height:1px; background:var(--border-color);"></div>
+        </div>
+
+        <button onclick="useGPS()" id="gps-btn" style="width:100%; padding:16px; background:rgba(45,106,79,0.05); color:var(--green); border:1.5px solid rgba(45,106,79,0.2); border-radius:16px; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:12px; font-family:'Poppins',sans-serif; transition:all 0.2s;" onmouseover="this.style.background='rgba(45,106,79,0.1)'" onmouseout="this.style.background='rgba(45,106,79,0.05)'">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Use My Current Location
+        </button>
+        
+        <p style="text-align:center; font-size:11px; color:var(--text-sec); margin-top:24px; line-height:1.5;">
+            By continuing, you agree to our <a href="#" style="color:var(--green); font-weight:600; text-decoration:none;">Terms of Service</a> & <a href="#" style="color:var(--green); font-weight:600; text-decoration:none;">Privacy Policy</a>
+        </p>
+    </div>
+</div>
+
+<script>
+    function openLocationModal() {
+    const modal = document.getElementById('loc-modal');
+    const overlay = document.getElementById('loc-overlay');
+    modal.style.display = 'block';
+    overlay.style.display = 'block';
+    
+    // Sync detailed info in modal
+    const locData = JSON.parse(localStorage.getItem('grodiur_lat_lon'));
+    const infoBox = document.getElementById('current-loc-info');
+    if (locData) {
+        infoBox.style.display = 'block';
+        document.getElementById('full-addr-display').textContent = locData.area;
+        document.getElementById('full-city-display').textContent = `${locData.city}${locData.pincode ? ', ' + locData.pincode : ''}`;
+        
+        const gpsBadge = document.getElementById('gps-confirmed-badge');
+        const manualBadge = document.getElementById('manual-pincode-badge');
+        
+        if (locData.isGPS) {
+            gpsBadge.style.display = 'inline-block';
+            manualBadge.style.display = 'none';
+        } else {
+            gpsBadge.style.display = 'none';
+            manualBadge.style.display = 'inline-block';
+        }
+    } else {
+        infoBox.style.display = 'none';
+    }
+}
+function closeLocationModal() {
+    document.getElementById('loc-modal').style.display='none';
+    document.getElementById('loc-overlay').style.display='none';
+}
+function useGPS() {
+    const modal = document.getElementById('loc-modal');
+    const originalContent = modal.innerHTML;
+
+    // Force clear old coordinates to avoid any caching
+    localStorage.removeItem('grodiur_lat_lon');
+
+    // Premium Loading UI
+    modal.innerHTML = `
+        <div style="text-align:center;padding:64px 40px; background:var(--card-bg); position:relative; overflow:hidden;">
+            <!-- Background Glow Effect -->
+            <div style="position:absolute; top:-20%; left:-20%; width:140%; height:140%; background:radial-gradient(circle, rgba(45,106,79,0.05) 0%, transparent 70%); pointer-events:none;"></div>
+            
+            <div style="position:relative; z-index:1;">
+                <div style="margin-bottom:32px; position:relative; display:inline-block;">
+                    <!-- Pulse Rings -->
+                    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:100px; height:100px; border:2px solid var(--green); border-radius:50%; animation: pulse-ring 2s infinite; opacity:0.2;"></div>
+                    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:80px; height:80px; border:2px solid var(--green); border-radius:50%; animation: pulse-ring 2s infinite 0.5s; opacity:0.1;"></div>
+                    
+                    <div style="width:72px; height:72px; background:linear-gradient(135deg, var(--green), var(--green-light)); border-radius:24px; display:flex; align-items:center; justify-content:center; color:white; box-shadow:0 12px 30px rgba(45,106,79,0.25); animation: float 3s ease-in-out infinite;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    </div>
+                </div>
+
+                <h4 style="color:var(--text-main); font-weight:800; font-size:22px; margin-bottom:12px; letter-spacing:-0.5px;">Checking delivery availability...</h4>
+                
+                <div id="status-step-container" style="height:20px; margin-bottom:32px;">
+                    <p id="status-step-text" style="color:var(--text-sec); font-size:14px; font-weight:500; margin:0; transition:all 0.5s ease;">Finding the fastest grocery delivery near you.</p>
+                </div>
+
+                <div style="width:100%; height:6px; background:var(--input-bg); border-radius:100px; overflow:hidden; margin:0 auto; max-width:240px;">
+                    <div style="width:100%; height:100%; background:linear-gradient(90deg, var(--green), var(--green-light)); border-radius:100px; animation: loading-progress 2.5s infinite ease-in-out;"></div>
+                </div>
+            </div>
+        </div>
+        <style>
+            @keyframes pulse-ring { 0% { transform: translate(-50%,-50%) scale(0.6); opacity: 0.5; } 100% { transform: translate(-50%,-50%) scale(1.4); opacity: 0; } }
+            @keyframes loading-progress { 0% { transform: translateX(-100%); } 50% { transform: translateX(0); } 100% { transform: translateX(100%); } }
+        </style>
+    `;
+
+    // Animate status steps
+    const steps = [
+        "Detecting your location...",
+        "Finding nearby stores...",
+        "Checking delivery availability...",
+        "Matching with live inventory...",
+        "Preparing your shopping experience..."
+    ];
+    let currentStep = 0;
+    const stepInterval = setInterval(() => {
+        const textEl = document.getElementById('status-step-text');
+        if (textEl) {
+            textEl.style.opacity = '0';
+            textEl.style.transform = 'translateY(10px)';
+            setTimeout(() => {
+                currentStep = (currentStep + 1) % steps.length;
+                textEl.textContent = steps[currentStep];
+                textEl.style.opacity = '1';
+                textEl.style.transform = 'translateY(0)';
+            }, 400);
+        }
+    }, 1800);
+
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+        clearInterval(stepInterval);
+        const { latitude, longitude, accuracy } = pos.coords;
+        // Keep technical logs in console ONLY
+        console.log("GPS Location:", { lat: latitude, lon: longitude, accuracy });
+
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=jsonv2&zoom=18&addressdetails=1`, {
+                headers: { 'Accept-Language': 'en-US,en;q=0.9', 'User-Agent': 'GrodiurApp/1.0' }
+            });
+            const data = await res.json();
+            
+            if (data.address) {
+                const a = data.address;
+                const area = a.suburb || a.neighbourhood || a.village || a.residential || a.road || a.city_district || 'Your Area';
+                const city = a.city || a.town || a.village || 'Bangalore';
+                const pincode = a.postcode || '';
+                
+                document.getElementById('nav-location-area').textContent = area;
+                document.getElementById('nav-location-city').textContent = `${city}${pincode ? ' ' + pincode : ''}`;
+                
+                const locObj = { lat: latitude, lon: longitude, area, city, pincode, isGPS: true };
+                localStorage.setItem('grodiur_lat_lon', JSON.stringify(locObj));
+                
+                showToastMsg('Location set successfully!', 'ok');
+                closeLocationModal();
+                setTimeout(() => location.reload(), 600);
+            } else {
+                throw new Error("Address not found");
+            }
+        } catch(e) {
+            clearInterval(stepInterval);
+            showToastMsg('Location check failed. Please enter pincode manually.', 'error');
+            location.reload(); 
+        }
+    }, (err) => { 
+        clearInterval(stepInterval);
+        showToastMsg('Unable to find nearby stores. Try entering pincode.', 'error'); 
+        location.reload();
+    }, {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+    });
+}
+
+function clearLocation() {
+    localStorage.removeItem('grodiur_lat_lon');
+    showToastMsg('Location cache cleared. Please set location again.');
+    location.reload();
+}
+let tempPincodeData = null;
+
+async function handlePincodeInput(input) {
+    input.value = input.value.replace(/\D/g, '');
+    const pin = input.value;
+    const loader = document.getElementById('pincode-loader');
+    const confirmBtn = document.getElementById('pincode-confirm-btn');
+    const status = document.getElementById('pincode-status');
+
+    if (pin.length === 6) {
+        loader.style.display = 'block';
+        status.style.display = 'block';
+        status.style.color = 'var(--text-sec)';
+        status.textContent = 'Searching location...';
+        confirmBtn.disabled = true;
+        confirmBtn.style.opacity = '0.5';
+
+        try {
+            const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+            const data = await res.json();
+
+            if (data[0].Status === "Success") {
+                const po = data[0].PostOffice[0];
+                tempPincodeData = {
+                    area: po.Name,
+                    city: po.District,
+                    state: po.State,
+                    pincode: pin,
+                    isGPS: false
+                };
+                status.style.color = '#16a34a';
+                status.textContent = `✓ ${po.Name}, ${po.District}`;
+                confirmBtn.disabled = false;
+                confirmBtn.style.opacity = '1';
+            } else {
+                throw new Error("Invalid pincode");
+            }
+        } catch (e) {
+            status.style.color = '#ef4444';
+            status.textContent = '❌ Invalid pincode or area not found';
+            tempPincodeData = null;
+        } finally {
+            loader.style.display = 'none';
+        }
+    } else {
+        loader.style.display = 'none';
+        status.style.display = 'none';
+        confirmBtn.disabled = true;
+        confirmBtn.style.opacity = '0.5';
+        tempPincodeData = null;
+    }
+}
+
+function confirmPincode() {
+    if (!tempPincodeData) {
+        showToastMsg('Please enter a valid 6-digit pincode', 'error');
+        return;
+    }
+    
+    localStorage.setItem('grodiur_lat_lon', JSON.stringify(tempPincodeData));
+    showToastMsg('Delivery location set to ' + tempPincodeData.area);
+    closeLocationModal();
+    location.reload();
+}
+
+window.addEventListener('load', () => {
+    const locData = JSON.parse(localStorage.getItem('grodiur_lat_lon'));
+    if (locData) {
+        document.getElementById('nav-location-area').textContent = locData.area;
+        document.getElementById('nav-location-city').textContent = `${locData.city}${locData.pincode ? ' ' + locData.pincode : ''}`;
+    }
+});
+function showToastMsg(msg, type = 'ok') {
+    const t = document.createElement('div');
+    t.className = `custom-toast toast-${type}`;
+    t.innerHTML = `
+        <div class="toast-content">
+            <div class="toast-icon">
+                ${type === 'error' ? 
+                    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' : 
+                    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>'
+                }
+            </div>
+            <span>${msg}</span>
+        </div>
+    `;
+    
+    const isError = type === 'error';
+    t.style.cssText = `
+        position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+        background: ${isError ? 'var(--card-bg)' : 'var(--card-bg)'};
+        border: 1px solid ${isError ? '#dc2626' : 'var(--green)'};
+        color: var(--text-main);
+        border-radius: 16px; padding: 16px 22px;
+        box-shadow: var(--card-shadow); z-index: 10000;
+        display: flex; align-items: center; min-width: 320px; max-width: 90%;
+        animation: toastFadeInDown 0.3s ease; pointer-events: auto;
+    `;
+
+    const iconBox = t.querySelector('.toast-icon');
+    iconBox.style.cssText = `
+        width: 28px; height: 28px;
+        background: ${isError ? '#dc2626' : 'var(--green)'};
+        color: white; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; margin-right: 12px;
+    `;
+
+    document.body.appendChild(t);
+    setTimeout(() => {
+        if (t.parentElement) {
+            t.style.opacity = '0';
+            t.style.transform = 'translateX(-50%) translateY(-10px)';
+            t.style.transition = 'all 0.3s ease';
+            setTimeout(() => t.remove(), 300);
+        }
+    }, 3000);
+}
+
+function showConfirmModal({ title, text, confirmText, confirmClass, onConfirm }) {
+    const overlay = document.createElement('div');
+    overlay.className = 'custom-modal-overlay';
+    overlay.style.cssText = `
+        position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+        backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 10001; animation: fadeIn 0.2s ease;
+    `;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: var(--card-bg); width: 90%; max-width: 400px;
+        border-radius: 24px; padding: 32px; text-align: center;
+        box-shadow: var(--card-shadow); border: 1px solid var(--border-color);
+        animation: modalScaleUp 0.2s ease;
+    `;
+
+    modal.innerHTML = `
+        <div style="width:60px; height:60px; background:rgba(239, 68, 68, 0.1); color:#ef4444; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </div>
+        <h3 style="font-weight:800; color:var(--text-main); margin-bottom:8px; font-size:22px;">${title}</h3>
+        <p style="color:var(--text-sec); font-size:15px; line-height:1.6; margin-bottom:28px;">${text}</p>
+        <div style="display:flex; gap:12px;">
+            <button class="modal-cancel" style="flex:1; padding:14px; border-radius:12px; border:1.5px solid var(--border-color); background:var(--card-bg); color:var(--text-sec); font-weight:700; transition:0.2s;">Cancel</button>
+            <button class="modal-confirm" style="flex:1; padding:14px; border-radius:12px; border:none; background:${confirmClass === 'danger' ? '#ef4444' : 'var(--green)'}; color:white; font-weight:700; transition:0.2s;">${confirmText}</button>
+        </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    const close = () => {
+        overlay.style.opacity = '0';
+        modal.style.transform = 'scale(0.95)';
+        setTimeout(() => overlay.remove(), 200);
+    };
+
+    overlay.querySelector('.modal-cancel').onclick = close;
+    overlay.querySelector('.modal-confirm').onclick = () => {
+        onConfirm();
+        close();
+    };
+    overlay.onclick = (e) => { if (e.target === overlay) close(); };
+}
+
+// Global styles for animations
+if (!document.getElementById('modal-animations')) {
+    const s = document.createElement('style');
+    s.id = 'modal-animations';
+    s.innerHTML = `
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes toastFadeInDown {
+            from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        @keyframes modalScaleUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal-cancel:hover { background: #f8fafc !important; border-color: #cbd5e1 !important; }
+        .modal-confirm:hover { opacity: 0.9; transform: translateY(-1px); }
+    `;
+    document.head.appendChild(s);
+}
+window.addEventListener('load', () => {
+    const savedLoc = localStorage.getItem('grodiur_lat_lon');
+    if (savedLoc) {
+        try {
+            const loc = JSON.parse(savedLoc);
+            const areaEl = document.getElementById('nav-location-area');
+            const cityEl = document.getElementById('nav-location-city');
+            if (areaEl) areaEl.textContent = loc.area || 'Set Location';
+            if (cityEl) cityEl.textContent = (loc.city || '') + (loc.pincode ? ' ' + loc.pincode : '');
+        } catch(e) { console.error("Location Restore Error:", e); }
+    }
+});
+
+/* Global Invoice Modal Logic (AJAX REPLACEMENT) */
+async function openInvoice(orderId) {
+    console.log("Fetching Invoice for Order:", orderId);
+    const overlay = document.getElementById('global-invoice-overlay');
+    const container = document.getElementById('global-invoice-container');
+    
+    // 1. Reset & Show Loading
+    container.innerHTML = '<div style="padding:100px; text-align:center; color:#64748b;"><div class="ml-spinner" style="width:40px; height:40px; border-width:3px; border-top-color:#0c831f;"></div><p style="margin-top:20px; font-weight:600;">Loading invoice...</p></div>';
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    try {
+        if (!orderId) throw new Error("Order ID missing");
+
+        // 2. Fetch Data
+        const res = await fetch(`/orders/api/orders/${orderId}`);
+        if (!res.ok) throw new Error("Failed to fetch order details");
+        
+        const data = await res.json();
+        console.log("INVOICE DATA RECEIVED:", data);
+
+        // 3. Render Component (Premium UI)
+        container.innerHTML = renderInvoiceTemplate(data);
+
+    } catch (err) {
+        console.error("Invoice Error:", err);
+        container.innerHTML = `<div style="padding:100px; text-align:center; color:#ef4444;"><span style="font-size:48px;">⚠️</span><p style="margin-top:20px; font-weight:700;">Unable to load invoice</p><p style="font-size:13px; color:#64748b;">${err.message}</p><button onclick="closeInvoiceModal()" style="margin-top:20px; padding:10px 20px; background:#f1f5f9; border:none; border-radius:10px; font-weight:600; cursor:pointer;">Close</button></div>`;
+    }
+}
+
+function renderInvoiceTemplate(data) {
+    const date = new Date(data.created_at).toLocaleString('en-IN', {
+        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true
+    });
+
+    const itemsHtml = data?.items?.map(item => `
+        <tr>
+            <td style="padding:24px 40px; border-bottom:1px solid #f1f5f9; font-size:14px; font-weight:600; color:#1e293b;">
+                ${item.name}
+                <span style="font-size:12px; color:#94a3b8; font-weight:500; display:block; margin-top:4px;">${item.unit}</span>
+            </td>
+            <td style="padding:24px 40px; border-bottom:1px solid #f1f5f9; font-size:14px; font-weight:600; color:#1e293b; text-align:center;">${item.quantity}</td>
+            <td style="padding:24px 40px; border-bottom:1px solid #f1f5f9; font-size:14px; font-weight:600; color:#1e293b; text-align:right;">₹${item.price}</td>
+            <td style="padding:24px 40px; border-bottom:1px solid #f1f5f9; font-size:14px; font-weight:600; color:#1e293b; text-align:right;">₹${item.subtotal}</td>
+        </tr>
+    `).join('') || '<tr><td colspan="4" style="text-align:center; padding:40px;">No items found</td></tr>';
+
+    return `
+        <div style="background:white; height:100%; overflow-y:auto; font-family:'Inter',sans-serif;">
+            <div class="invoice-header-box" style="background:#0c831f; padding:40px; color:white; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h1 style="font-size:36px; font-weight:800; margin:0; letter-spacing:-1px;">Grod<span style="color:#fbbf24;">iur</span></h1>
+                    <p style="font-size:14px; opacity:0.9; margin:4px 0 0;">Fresh groceries, delivered fast</p>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:12px; font-weight:600; opacity:0.8; text-transform:uppercase; letter-spacing:1px;">INVOICE</div>
+                    <div style="font-size:20px; font-weight:800; margin:4px 0;">${data.order_id}</div>
+                    <div style="font-size:14px; opacity:0.9;">${date}</div>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; border-bottom:1px solid #f1f5f9;">
+                <div style="padding:40px; border-right:1px solid #f1f5f9;">
+                    <span style="font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; margin-bottom:16px; display:block;">BILLED TO</span>
+                    <div style="font-size:18px; font-weight:800; color:#0f172a; margin-bottom:8px;">${data.full_name}</div>
+                    <div style="font-size:14px; color:#64748b; font-weight:500;">📞 ${data.phone}</div>
+                </div>
+                <div style="padding:40px;">
+                    <span style="font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; margin-bottom:16px; display:block;">DELIVERY ADDRESS</span>
+                    <div style="font-size:14px; color:#64748b; font-weight:500; line-height:1.6;">
+                        ${data.address_line}<br>${data.city} – ${data.pincode}
+                    </div>
+                    <span style="display:inline-block; background:${data.payment_status === 'pending' ? '#fff7ed' : '#f0fdf4'}; color:${data.payment_status === 'pending' ? '#c2410c' : '#166534'}; padding:4px 14px; border-radius:20px; font-size:12px; font-weight:700; margin-top:16px; border:1px solid ${data.payment_status === 'pending' ? '#ffedd5' : '#bbf7d0'}; text-transform:uppercase;">
+                        ${data.payment_method} - ${data.payment_status.toUpperCase()}
+                    </span>
+                </div>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#f8fafc;">
+                        <th style="padding:16px 40px; text-align:left; font-size:12px; font-weight:700; color:#475569; text-transform:uppercase;">PRODUCT</th>
+                        <th style="padding:16px 40px; text-align:center; font-size:12px; font-weight:700; color:#475569; text-transform:uppercase;">QTY</th>
+                        <th style="padding:16px 40px; text-align:right; font-size:12px; font-weight:700; color:#475569; text-transform:uppercase;">UNIT PRICE</th>
+                        <th style="padding:16px 40px; text-align:right; font-size:12px; font-weight:700; color:#475569; text-transform:uppercase;">SUBTOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>${itemsHtml}</tbody>
+            </table>
+
+            <div style="padding:40px; display:flex; justify-content:space-between; align-items:flex-end;">
+                <div>
+                    <div style="margin-bottom:20px;">
+                        <p style="margin:5px 0; font-size:14px; font-weight:600; color:#64748b;">Item Total: <strong style="color:#0f172a;">₹${data.item_total}</strong></p>
+                        <p style="margin:5px 0; font-size:14px; font-weight:600; color:#64748b;">Delivery Fee: <strong style="color:#16a34a;">${data.delivery_fee === 0 ? 'FREE' : '₹' + data.delivery_fee}</strong></p>
+                        ${data.discount > 0 ? `<p style="margin:5px 0; font-size:14px; font-weight:600; color:#64748b;">Coupon Discount: <strong style="color:#a855f7;">-₹${data.discount}</strong></p>` : ''}
+                        <p style="margin-top:20px; font-size:18px; color:#0f172a; border-top:2px solid #f1f5f9; padding-top:12px; font-weight:800;">
+                            ${data.payment_method === 'COD' ? 'Amount to Pay:' : 'Total Amount Paid:'} ₹${data.total}
+                        </p>
+                    </div>
+                    <div>
+                        <div style="color:#0c831f; font-weight:800; font-size:15px; margin-bottom:4px;">🙏 Thank you for shopping with Grodiur!</div>
+                        <div style="font-size:12px; color:#94a3b8; font-weight:500;">Order placed on ${date}</div>
+                    </div>
+                </div>
+                <button onclick="window.print()" class="print-hide" style="background:#0c831f; color:white; border:none; border-radius:12px; padding:14px 28px; font-weight:700; font-size:15px; cursor:pointer; display:flex; align-items:center; gap:10px; box-shadow:0 4px 12px rgba(12,131,31,0.25);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    Print / Save PDF
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function closeInvoiceModal() {
+    const overlay = document.getElementById('global-invoice-overlay');
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+async function updateGlobalCartCount() {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const totalQty = cart.reduce((acc, item) => acc + (parseInt(item.quantity) || 0), 0);
+    
+    const badge = document.getElementById('global-cart-count');
+    const guestBadge = document.getElementById('global-cart-count-guest');
+    
+    const updateDisplay = (count) => {
+        if (badge) {
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'flex' : 'none';
+        }
+        if (guestBadge) {
+            guestBadge.textContent = count;
+            guestBadge.style.display = count > 0 ? 'flex' : 'none';
+        }
+    };
+
+    updateDisplay(totalQty);
+}
+
+// Global initialization
+if (!localStorage.getItem("cart")) localStorage.setItem("cart", "[]");
+
+window.addEventListener('cartUpdated', updateGlobalCartCount);
+window.addEventListener('storage', (e) => {
+    if (e.key === 'cart') {
+        updateGlobalCartCount();
+        // Manually trigger cartUpdated so other listeners on this page (like product list) also refresh
+        window.dispatchEvent(new Event("cartUpdated"));
+    }
+});
+
+// Sync database cart to localStorage on load for logged-in users to prevent stale state
+async function syncDatabaseCart() {
+    {% if user.is_authenticated %}
+    try {
+        const res = await fetch('/cart/api/json/');
+        const data = await res.json();
+        if (data.items) {
+            const cartItems = data.items.map(item => ({
+                id: String(item.product_id),
+                name: item.product_name,
+                price: item.price,
+                image: item.image,
+                quantity: item.quantity
+            }));
+            localStorage.setItem("cart", JSON.stringify(cartItems));
+            window.dispatchEvent(new Event("cartUpdated"));
+        }
+    } catch (e) { console.error("Database Cart Sync Error:", e); }
+    {% endif %}
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateGlobalCartCount();
+    syncDatabaseCart();
+});
+
+// ═══ GLOBAL TOAST NOTIFICATION SYSTEM ═══
+function showToast(message, type = 'success', duration = 2800) {
+    let container = document.getElementById('grodiur-toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'grodiur-toast-container';
+        container.style.cssText = 'position:fixed;top:24px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:12px;pointer-events:none;max-width:320px;';
+        document.body.appendChild(container);
+    }
+
+    const colors = {
+        success: { bg: '#1f7a4d', icon: '✓' },
+        error:   { bg: '#ef4444', icon: '✕' },
+        info:    { bg: '#3b82f6', icon: 'ℹ' }
+    };
+    const c = colors[type] || colors.success;
+
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        background: ${c.bg};
+        color: #ffffff;
+        padding: 14px 18px;
+        border-radius: 16px;
+        font-size: 14px;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        pointer-events: auto;
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        backdrop-filter: blur(10px);
+        cursor: pointer;
+        line-height: 1.4;
+    `;
+
+    toast.innerHTML = `
+        <span style="width:24px; height:24px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex-shrink:0;">${c.icon}</span>
+        <span style="flex:1;">${message}</span>
+    `;
+
+    toast.onclick = () => dismissToast(toast);
+    container.appendChild(toast);
+
+    // Animate in
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0) scale(1)';
+    });
+
+    // Auto dismiss
+    setTimeout(() => dismissToast(toast), duration);
+
+    // Limit to 4 toasts max
+    while (container.children.length > 4) {
+        dismissToast(container.children[0]);
+    }
+}
+
+function dismissToast(toast) {
+    if (!toast || toast._dismissed) return;
+    toast._dismissed = true;
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(-20px) scale(0.95)';
+    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+}
+</script>
+
+<!-- Global Invoice Modal Markup -->
+<div id="global-invoice-overlay" onclick="closeInvoiceModal()">
+    <div id="global-invoice-modal" class="global-invoice-modal" onclick="event.stopPropagation()">
+        <button class="global-invoice-close" onclick="closeInvoiceModal()">✕</button>
+        <div id="global-invoice-container" style="flex:1; overflow:hidden; display:flex; flex-direction:column;">
+            <!-- Content Injected via JS -->
+        </div>
+    </div>
+</div>
+
+<!-- Messages -->
+<div class="container mt-3">
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Main Content -->
+<main class="container my-4">
+    {% block content %}{% endblock %}
+</main>
+
+<!-- Premium Footer matching Screenshot 4 -->
+<!-- Premium Footer -->
+<footer style="background:#0a0a1a;color:white;margin-top:80px;padding:60px 0 30px;font-family:'Poppins',sans-serif;font-size:14px;">
+    <div class="container" style="max-width:1200px;">
+        <div class="row" style="margin-bottom:40px;">
+            <div class="col-lg-4 col-md-12 mb-5">
+                <div style="font-size:1.5rem;font-weight:800;letter-spacing:-0.5px;margin-bottom:16px;"><span style="color:#ffffff;">Grod</span><span style="color:#ffc107;">iur</span></div>
+                <p style="color:#94a3b8;line-height:1.6;max-width:320px;font-size:13px;">
+                    Fresh groceries, daily essentials, and more — delivered fast. Quality you can trust, prices you will love.
+                </p>
+                <div style="display:flex;gap:12px;margin-top:24px;">
+                    <a href="#" style="width:36px;height:36px;background:#13132b;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#94a3b8;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.color='#fff';this.style.background='#1e1e3f'" onmouseout="this.style.color='#94a3b8';this.style.background='#13132b'">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                    </a>
+                    <a href="#" style="width:36px;height:36px;background:#13132b;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#94a3b8;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.color='#fff';this.style.background='#1e1e3f'" onmouseout="this.style.color='#94a3b8';this.style.background='#13132b'">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    </a>
+                    <a href="#" style="width:36px;height:36px;background:#13132b;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#94a3b8;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.color='#fff';this.style.background='#1e1e3f'" onmouseout="this.style.color='#94a3b8';this.style.background='#13132b'">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="col-lg-2 col-md-4 col-6 mb-4">
+                <h6 style="font-weight:600;margin-bottom:20px;font-size:13px;color:#f8fafc;letter-spacing:0.5px;">QUICK LINKS</h6>
+                <div class="d-flex flex-column gap-3" style="font-size:13px;">
+                    <a href="{% url 'product_list' %}" style="color:#94a3b8;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#94a3b8'">All Products</a>
+                    <a href="/orders/history/" style="color:#94a3b8;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#94a3b8'">My Orders</a>
+                    <a href="{% url 'cart_detail' %}" style="color:#94a3b8;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#94a3b8'">Shopping Cart</a>
+                    <a href="{% url 'profile' %}" style="color:#94a3b8;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#94a3b8'">My Account</a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-4 col-6 mb-4">
+                <h6 style="font-weight:600;margin-bottom:20px;font-size:13px;color:#f8fafc;letter-spacing:0.5px;">CATEGORIES</h6>
+                <div id="footer-categories" class="d-flex flex-column gap-3" style="font-size:13px;">
+                    <div class="ml-spinner" style="width:20px; height:20px; border-width:2px; border-top-color:#ffc107;"></div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-4 mb-4">
+                <h6 style="font-weight:600;margin-bottom:20px;font-size:13px;color:#f8fafc;letter-spacing:0.5px;">CONTACT</h6>
+                <div class="d-flex flex-column gap-3" style="font-size:13px;color:#94a3b8;">
+                    <div style="display:flex;align-items:flex-start;gap:12px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" style="margin-top:2px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        <span>123 Market Street, Mumbai, India</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        <span>+91 9876543210</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        <span>support@grodiur.com</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="border-top:1px solid #1e1e3f;padding-top:24px;text-align:center;">
+            <p style="color:#475569;font-size:12px;margin:0;">
+                © 2026 <span style="color:#ffffff;">Grod</span><span style="color:#ffc107;">iur</span>. All rights reserved.
+            </p>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // Dynamic Footer Logic
+    async function loadFooterData() {
+        // 1. Load Categories
+        try {
+            const res = await fetch('/products/api/categories/');
+            const categories = await res.json();
+            const container = document.getElementById('footer-categories');
+            
+            if (categories.length > 0) {
+                container.innerHTML = categories.map(cat => `
+                    <a href="/products/?category=${cat.slug}" style="color:#94a3b8;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#94a3b8'">${cat.name}</a>
+                `).join('');
+            } else {
+                container.innerHTML = '<span style="color:#64748b; font-size:12px;">No categories available</span>';
+            }
+        } catch (e) {
+            console.error("Footer Categories Load Error:", e);
+        }
+    }
+
+    window.addEventListener('load', loadFooterData);
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- AI Chatbot Upgrade -->
+{% if user.is_authenticated %}
+<div id="chatbot-container" style="position:fixed;bottom:25px;right:25px;z-index:9000; font-family:'Inter',sans-serif;">
+    <button id="chat-toggle" style="width:64px; height:64px; background:linear-gradient(135deg, #2d6a4f, #0c831f); color:white; border:none; border-radius:50%; font-size:28px; cursor:pointer; box-shadow:0 8px 30px rgba(12,131,31,0.4); transition:all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display:flex; align-items:center; justify-content:center; position:relative;">
+        <span id="chat-icon-msg">💬</span>
+        <span id="chat-icon-close" style="display:none; font-size:24px;">✕</span>
+        <div style="position:absolute; top:2px; right:2px; width:14px; height:14px; background:#4ade80; border:3px solid white; border-radius:50%; animation: pulse-online 2s infinite;"></div>
+    </button>
+
+    <div id="chat-box" style="display:none; position:absolute; bottom:85px; right:0; width:360px; background:rgba(255,255,255,0.95); backdrop-filter:blur(20px); border-radius:24px; box-shadow:0 20px 60px rgba(0,0,0,0.15); overflow:hidden; border:1px solid rgba(255,255,255,0.3); transform:translateY(20px); opacity:0; transition:all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#1b4332,#2d6a4f); padding:20px; color:white;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:44px; height:44px; background:rgba(255,255,255,0.2); border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px; animation: float-bot 3s ease-in-out infinite;">🤖</div>
+                <div>
+                    <h6 style="margin:0; font-weight:800; font-size:16px;">Grodiur Assistant</h6>
+                    <div style="display:flex; align-items:center; gap:5px; font-size:12px; opacity:0.8;">
+                        <span style="width:6px; height:6px; background:#4ade80; border-radius:50%;"></span>
+                        Online & Ready to Help
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages Area -->
+        <div id="chat-messages" style="height:380px; overflow-y:auto; padding:20px; background:radial-gradient(circle at top right, rgba(45,106,79,0.02), transparent); display:flex; flex-direction:column; gap:16px; scroll-behavior:smooth;">
+            <!-- Welcome Message -->
+            <div style="background:white; color:#334155; padding:16px; border-radius:18px 18px 18px 4px; max-width:90%; font-size:14px; line-height:1.6; box-shadow:0 4px 15px rgba(0,0,0,0.03); border:1px solid #f1f5f9;">
+                <div style="font-weight:700; margin-bottom:8px; font-size:15px;">👋 Hello {{ user.first_name|default:"there" }}!</div>
+                I'm your Grodiur Assistant. I can help you track orders, check delivery times, or handle refunds.
+            </div>
+            
+            <!-- Quick Actions -->
+            <div id="chat-quick-actions" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;">
+                <button onclick="sendQuickAction('Track Order')" style="background:var(--success-bg); color:var(--green); border:1.5px solid rgba(45,106,79,0.1); padding:8px 14px; border-radius:100px; font-size:12px; font-weight:700; cursor:pointer; transition:0.2s;">📦 Track Order</button>
+                <button onclick="sendQuickAction('My Orders')" style="background:var(--success-bg); color:var(--green); border:1.5px solid rgba(45,106,79,0.1); padding:8px 14px; border-radius:100px; font-size:12px; font-weight:700; cursor:pointer; transition:0.2s;">🛒 My Orders</button>
+                <button onclick="sendQuickAction('Delivery Help')" style="background:var(--success-bg); color:var(--green); border:1.5px solid rgba(45,106,79,0.1); padding:8px 14px; border-radius:100px; font-size:12px; font-weight:700; cursor:pointer; transition:0.2s;">📍 Delivery Help</button>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div style="padding:16px; background:white; border-top:1px solid #f1f5f9; display:flex; gap:10px;">
+            <input type="text" id="chat-input" placeholder="Type a message or Order ID..." style="flex:1; border:1.5px solid #e2e8f0; border-radius:16px; padding:12px 16px; font-size:14px; outline:none; transition:0.2s; font-family:inherit;" onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='#e2e8f0'">
+            <button onclick="sendMessage()" style="background:var(--green); color:white; border:none; border-radius:14px; width:48px; height:48px; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 4px 12px rgba(12,131,31,0.2); transition:0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes pulse-online { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+    @keyframes float-bot { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+    @keyframes msg-slide-up { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .chat-msg { animation: msg-slide-up 0.4s ease forwards; }
+    #chat-messages::-webkit-scrollbar { width: 5px; }
+    #chat-messages::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+</style>
+
+<script>
+    const chatToggle = document.getElementById('chat-toggle');
+    const chatBox = document.getElementById('chat-box');
+    const chatIn = document.getElementById('chat-input');
+    const chatMsgs = document.getElementById('chat-messages');
+
+    chatToggle.onclick = () => {
+        const isHidden = chatBox.style.display === 'none';
+        if (isHidden) {
+            chatBox.style.display = 'block';
+            setTimeout(() => {
+                chatBox.style.transform = 'translateY(0)';
+                chatBox.style.opacity = '1';
+                document.getElementById('chat-icon-msg').style.display = 'none';
+                document.getElementById('chat-icon-close').style.display = 'block';
+            }, 10);
+        } else {
+            chatBox.style.transform = 'translateY(20px)';
+            chatBox.style.opacity = '0';
+            setTimeout(() => {
+                chatBox.style.display = 'none';
+                document.getElementById('chat-icon-msg').style.display = 'block';
+                document.getElementById('chat-icon-close').style.display = 'none';
+            }, 400);
+        }
+    };
+
+    chatIn.onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };
+
+    function sendQuickAction(text) {
+        chatIn.value = text;
+        sendMessage();
+    }
+
+    let isChatLoading = false;
+
+    // Standardized Message Handler
+    async function sendMessage() {
+        const message = chatIn.value.trim();
+        if (!message || isChatLoading) return;
+
+        console.log("Chatbot: Processing message ->", message);
+        
+        // 1. Prevent duplicate submissions
+        isChatLoading = true;
+        chatIn.disabled = true;
+        chatIn.value = ''; // Clear immediately
+
+        // 2. Render User Message
+        const userMsgHtml = `
+            <div class="chat-msg user-msg" style="background:var(--green); color:white; padding:12px 18px; border-radius:20px 20px 4px 20px; max-width:85%; align-self:flex-end; font-size:14px; font-weight:700; box-shadow:0 4px 15px rgba(12,131,31,0.1); margin-bottom:4px;">
+                ${message}
+            </div>
+        `;
+        chatMsgs.insertAdjacentHTML('beforeend', userMsgHtml);
+        chatMsgs.scrollTo({ top: chatMsgs.scrollHeight, behavior: 'smooth' });
+
+        // 3. Local Detection for Instant Feedback
+        const orderRegex = /gro-\d{4}-\d+/i;
+        const detectedOrderId = message.match(orderRegex)?.[0];
+        
+        if (detectedOrderId) {
+            console.log("Chatbot: Detected Order ID ->", detectedOrderId);
+            await handleTrackOrder(detectedOrderId.toUpperCase());
+            resetChatState();
+            return;
+        }
+
+        // 4. Default Bot Response (via Backend)
+        const loadingId = 'loading-' + Date.now();
+        showLoadingState(loadingId);
+
+        try {
+            const res = await fetch('/chatbot/response/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+                body: JSON.stringify({message: message})
+            });
+            const data = await res.json();
+            
+            removeLoadingState(loadingId);
+
+            if (data.response.startsWith('INTENT_TRACK_ORDER|')) {
+                const orderId = data.response.split('|')[1];
+                await handleTrackOrder(orderId);
+            } else if (data.response === 'INTENT_MY_ORDERS') {
+                await renderMyOrders();
+            } else if (data.response.startsWith('INTENT_PRODUCT_SEARCH|')) {
+                const searchQuery = data.response.split('|')[1];
+                await renderProductResults(searchQuery);
+            } else {
+                showBotMsg(data.response);
+            }
+        } catch (e) {
+            console.error("Chatbot API Failure:", e);
+            removeLoadingState(loadingId);
+            showBotMsg("⚠️ Sorry, I'm having trouble connecting. Please try again.");
+        } finally {
+            resetChatState();
+        }
+    }
+
+    // Dedicated Tracking Handler
+    async function handleTrackOrder(orderId) {
+        const loadingId = 'track-loading-' + Date.now();
+        showLoadingState(loadingId, `🔍 Checking your order **${orderId}**...`);
+
+        try {
+            console.log("Chatbot: Fetching order lookup ->", orderId);
+            const res = await fetch(`/orders/api/orders/${orderId}`);
+            
+            removeLoadingState(loadingId);
+
+            if (res.ok) {
+                const order = await res.json();
+                console.log("Chatbot: Order found ->", order);
+                renderOrderTracker(order);
+            } else {
+                console.warn("Chatbot: Order not found ->", orderId);
+                showBotMsg(`❌ **Order Not Found**\n\nI couldn't find details for **${orderId}**. Please check your Order ID and try again.`);
+            }
+        } catch (e) {
+            console.error("Chatbot Tracking Error:", e);
+            removeLoadingState(loadingId);
+            showBotMsg("⚠️ Failed to load order details. Please try again later.");
+        }
+    }
+
+    function showLoadingState(id, text = 'Thinking...') {
+        const html = `
+            <div id="${id}" class="chat-msg bot-msg" style="background:white; border:1px solid #f1f5f9; padding:12px 16px; border-radius:20px 20px 20px 4px; width:fit-content; display:flex; gap:8px; align-items:center; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
+                <div class="ml-spinner" style="width:14px; height:14px; border-width:2px; border-top-color:var(--green);"></div>
+                <span style="font-size:13px; color:#64748b; font-weight:600;">${text}</span>
+            </div>
+        `;
+        chatMsgs.insertAdjacentHTML('beforeend', html);
+        chatMsgs.scrollTo({ top: chatMsgs.scrollHeight, behavior: 'smooth' });
+    }
+
+    function removeLoadingState(id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+    }
+
+    function resetChatState() {
+        isChatLoading = false;
+        chatIn.disabled = false;
+        chatIn.focus();
+        setTimeout(() => {
+            chatMsgs.scrollTo({ top: chatMsgs.scrollHeight, behavior: 'smooth' });
+        }, 100);
+    }
+
+    async function renderMyOrders() {
+        try {
+            const res = await fetch('/orders/api/recent-orders/');
+            const orders = await res.json();
+            
+            let html = `<div class="chat-msg bot-msg" style="width:95%;">
+                <div style="font-weight:800; color:#1e293b; margin-bottom:12px; font-size:15px;">📦 Your Recent Orders</div>
+                <div style="display:flex; flex-direction:column; gap:10px;">`;
+            
+            if (orders.length === 0) {
+                html += `<div style="color:#64748b; font-size:13px; padding:12px; background:#f8fafc; border-radius:12px;">No orders found.</div>`;
+            } else {
+                orders.slice(0, 5).forEach(o => {
+                    html += `
+                        <div onclick="sendQuickAction('${o.order_id}')" style="background:white; border:1.5px solid #f1f5f9; padding:12px; border-radius:16px; cursor:pointer; transition:0.2s; display:flex; justify-content:space-between; align-items:center;" onmouseover="this.style.borderColor='var(--green)';this.style.background='#f0fdf4'" onmouseout="this.style.borderColor='#f1f5f9';this.style.background='white'">
+                            <div>
+                                <div style="font-size:13px; font-weight:800; color:#1e293b; font-family:monospace;">#${o.order_id}</div>
+                                <div style="font-size:11px; color:#64748b; font-weight:600;">₹${o.total_price} • ${new Date(o.created_at).toLocaleDateString()}</div>
+                            </div>
+                            <div style="font-size:11px; font-weight:800; color:var(--green); text-transform:uppercase;">${o.status}</div>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += `</div></div>`;
+            chatMsgs.insertAdjacentHTML('beforeend', html);
+            chatMsgs.scrollTo({ top: chatMsgs.scrollHeight, behavior: 'smooth' });
+        } catch (e) {
+            showBotMsg("I couldn't fetch your orders right now.");
+        }
+    }
+
+    function renderOrderTracker(o) {
+        const getStep = (s) => {
+            const map = {
+                'confirmed': 0, 'pending': 0,
+                'processing': 1, 'packed': 1,
+                'out_for_delivery': 2, 'shipped': 2, 'on_way': 2,
+                'delivered': 3
+            };
+            return map[s.toLowerCase()] ?? 0;
+        };
+
+        const stages = ['confirmed', 'processing', 'out_for_delivery', 'delivered'];
+        const labels = ['Confirmed', 'Packed', 'On Way', 'Arrived'];
+        const currentIndex = getStep(o.status);
+        
+        // Tracking Progress UI
+        let trackerHtml = '<div style="display:flex; justify-content:space-between; margin:20px 0 10px; position:relative; padding:0 5px;">';
+        trackerHtml += '<div style="position:absolute; top:8px; left:10%; right:10%; height:2px; background:#f1f5f9; z-index:1;"></div>';
+        trackerHtml += `<div style="position:absolute; top:8px; left:10%; width:${(currentIndex / 3) * 80}%; height:2px; background:var(--green); z-index:1; transition:width 1s;"></div>`;
+        
+        labels.forEach((label, i) => {
+            const isActive = i <= currentIndex;
+            const isCurrent = i === currentIndex;
+            trackerHtml += `
+                <div style="position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:6px;">
+                    <div style="width:18px; height:18px; border-radius:50%; background:${isActive ? 'var(--green)' : '#e2e8f0'}; border:3px solid white; box-shadow:0 0 0 1px ${isActive ? 'var(--green)' : '#e2e8f0'}; ${isCurrent ? 'animation:pulse-online 2s infinite;' : ''}"></div>
+                    <span style="font-size:9px; font-weight:800; color:${isActive ? 'var(--green)' : '#94a3b8'}; text-transform:uppercase;">${label}</span>
+                </div>
+            `;
+        });
+        trackerHtml += '</div>';
+
+        const orderDate = new Date(o.created_at).toLocaleDateString();
+        const totalPrice = o.total_price || o.total;
+
+        // Premium Card UI (Matching List Style)
+        const trackerCardHtml = `
+            <div class="chat-msg bot-msg" style="width:95%; animation: msg-slide-up 0.5s ease-out forwards;">
+                <!-- Main Order Card -->
+                <div style="background:white; border:1.5px solid #f1f5f9; padding:16px; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.04); transition:0.3s;" onmouseover="this.style.borderColor='var(--green)';this.style.boxShadow='0 15px 35px rgba(12,131,31,0.08)'" onmouseout="this.style.borderColor='#f1f5f9';this.style.boxShadow='0 10px 30px rgba(0,0,0,0.04)'">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                        <div>
+                            <div style="font-size:14px; font-weight:800; color:#1e293b; font-family:monospace; letter-spacing:0.5px;">#${o.order_id}</div>
+                            <div style="font-size:12px; color:#64748b; font-weight:600; margin-top:2px;">₹${totalPrice} • ${orderDate}</div>
+                        </div>
+                        <div style="font-size:10px; font-weight:800; color:var(--green); background:var(--success-bg); padding:6px 10px; border-radius:100px; text-transform:uppercase; letter-spacing:0.5px;">
+                            ${o.status.replace(/_/g,' ')}
+                        </div>
+                    </div>
+
+                    <!-- Bill Summary Section -->
+                    <div style="border-top:1px dashed #f1f5f9; padding-top:15px; margin-top:15px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:12px; color:#64748b; font-weight:600;">
+                            <span>Item Total</span>
+                            <span>₹${o.item_total}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:12px; color:#64748b; font-weight:600;">
+                            <span>Delivery Fee</span>
+                            <span style="color:${o.delivery_fee == 0 ? '#16a34a' : '#64748b'}; font-weight:700;">
+                                ${o.delivery_fee == 0 ? 'FREE' : '₹' + o.delivery_fee}
+                            </span>
+                        </div>
+                        ${o.discount > 0 ? `
+                        <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:12px; color:#a855f7; font-weight:600;">
+                            <span>Coupon Discount</span>
+                            <span>-₹${o.discount}</span>
+                        </div>
+                        ` : ''}
+                        <div style="display:flex; justify-content:space-between; margin-top:10px; padding-top:8px; border-top:1px solid #f8fafc; font-size:14px; color:#1e293b; font-weight:800;">
+                            <span>
+                                ${o.payment_status === 'paid' ? 'Amount Paid' : (o.payment_method === 'COD' ? 'Payable on Delivery' : 'Total Amount')}
+                            </span>
+                            <span>₹${totalPrice}</span>
+                        </div>
+                    </div>
+
+                    <!-- Payment Status Badge -->
+                    <div style="margin-top:12px; padding:8px 12px; border-radius:10px; background:${o.payment_status === 'paid' ? '#f0fdf4' : '#fff7ed'}; display:flex; align-items:center; gap:8px; border:1px solid ${o.payment_status === 'paid' ? '#bbf7d0' : '#ffedd5'};">
+                        <div style="width:6px; height:6px; border-radius:50%; background:${o.payment_status === 'paid' ? '#16a34a' : '#f97316'};"></div>
+                        <span style="font-size:11px; font-weight:700; color:${o.payment_status === 'paid' ? '#166534' : '#9a3412'};">
+                            ${o.payment_status === 'paid' ? 
+                                (o.payment_method === 'COD' ? 'Paid via COD (Cash Collected)' : 'Paid via ' + o.payment_method) : 
+                                (o.payment_method === 'COD' ? 'COD Pending (Pay on Delivery)' : 'Payment Pending')}
+                        </span>
+                    </div>
+
+                </div>
+            </div>
+        `;
+        chatMsgs.insertAdjacentHTML('beforeend', trackerCardHtml);
+        chatMsgs.scrollTo({ top: chatMsgs.scrollHeight, behavior: 'smooth' });
+    }
+
+    async function renderProductResults(query) {
+        const loadingId = 'search-loading-' + Date.now();
+        showLoadingState(loadingId, `🔍 Searching for "${query}"...`);
+
+        try {
+            const res = await fetch(`/products/api/search/?q=${encodeURIComponent(query)}`);
+            const products = await res.json();
+            
+            removeLoadingState(loadingId);
+
+            if (!products || products.length === 0) {
+                showBotMsg(`❌ No products found for "**${query}**"\n\nTry searching for:\n• onion\n• milk\n• rice\n• fruits`);
+                return;
+            }
+
+            let html = `<div class="chat-msg bot-msg" style="width:95%;">`;
+            html += `<div style="font-weight:800; color:#1e293b; margin-bottom:12px; font-size:15px;">🛒 Found ${products.length} product${products.length > 1 ? 's' : ''} for "${query}"</div>`;
+            html += `<div style="display:flex; flex-direction:column; gap:10px;">`;
+
+            products.forEach((p, idx) => {
+                const discount = p.mrp_price ? Math.round((1 - parseFloat(p.price) / parseFloat(p.mrp_price)) * 100) : 0;
+                html += `
+                    <div style="background:white; border:1.5px solid #f1f5f9; border-radius:18px; overflow:hidden; transition:0.3s; animation: msg-slide-up 0.4s ease-out ${idx * 0.08}s both; box-shadow:0 4px 15px rgba(0,0,0,0.03);" onmouseover="this.style.borderColor='var(--green)';this.style.boxShadow='0 8px 25px rgba(12,131,31,0.08)'" onmouseout="this.style.borderColor='#f1f5f9';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.03)'">
+                        <div style="display:flex; gap:12px; padding:12px;">
+                            <!-- Product Image -->
+                            <a href="/products/${p.slug}/" style="flex-shrink:0;">
+                                <div style="width:70px; height:70px; border-radius:14px; background:#f8fafc; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+                                    ${p.image ? `<img src="${p.image}" style="width:100%; height:100%; object-fit:cover;">` : `<span style="font-size:32px;">🥬</span>`}
+                                </div>
+                            </a>
+                            <!-- Product Info -->
+                            <div style="flex:1; min-width:0;">
+                                <a href="/products/${p.slug}/" style="text-decoration:none;">
+                                    <div style="font-size:13px; font-weight:800; color:#1e293b; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.name}</div>
+                                </a>
+                                <div style="font-size:11px; color:#94a3b8; font-weight:600; margin-bottom:6px;">${p.category} • ${p.unit}</div>
+                                <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+                                    <span style="font-size:15px; font-weight:800; color:#1e293b;">₹${p.price}</span>
+                                    ${p.mrp_price ? `<span style="font-size:11px; color:#94a3b8; text-decoration:line-through;">₹${p.mrp_price}</span>` : ''}
+                                    ${discount > 0 ? `<span style="font-size:10px; font-weight:800; color:#10b981; background:#ecfdf5; padding:2px 6px; border-radius:6px;">${discount}% OFF</span>` : ''}
+                                </div>
+                                <div style="display:flex; align-items:center; justify-content:space-between;">
+                                    <span style="font-size:10px; font-weight:700; color:${p.stock > 0 ? 'var(--green)' : '#ef4444'}; background:${p.stock > 0 ? 'var(--success-bg)' : '#fef2f2'}; padding:3px 8px; border-radius:6px;">${p.stock > 0 ? 'In Stock' : 'Out of Stock'}</span>
+                                    ${p.stock > 0 ? `
+                                        <button onclick="chatAddToCart(${p.id}, '${p.name.replace(/'/g,"\\'")}', '${p.price}', '${p.image || ''}', this)" style="background:var(--green); color:white; border:none; padding:6px 14px; border-radius:10px; font-size:11px; font-weight:800; cursor:pointer; transition:0.2s; box-shadow:0 2px 8px rgba(12,131,31,0.2);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                            + Add
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div></div>`;
+            chatMsgs.insertAdjacentHTML('beforeend', html);
+            chatMsgs.scrollTo({ top: chatMsgs.scrollHeight, behavior: 'smooth' });
+
+        } catch (e) {
+            console.error('Product search error:', e);
+            removeLoadingState(loadingId);
+            showBotMsg('⚠️ Could not search products right now. Please try again.');
+        }
+    }
+
+    async function chatAddToCart(productId, productName, productPrice, productImage, btn) {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:4px;"><span class="ml-spinner" style="width:10px;height:10px;border-width:2px;border-top-color:white;"></span></span>';
+        btn.disabled = true;
+
+        try {
+            // 1. POST to server (database persistence)
+            const res = await fetch(`/cart/add/${productId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({quantity: 1})
+            });
+
+            if (res.ok || res.redirected) {
+                // 2. Update localStorage (client-side state)
+                let cart = JSON.parse(localStorage.getItem("cart")) || [];
+                const existingIdx = cart.findIndex(item => String(item.id) === String(productId));
+                
+                if (existingIdx >= 0) {
+                    cart[existingIdx].quantity += 1;
+                } else {
+                    cart.push({
+                        id: String(productId),
+                        name: productName,
+                        price: parseFloat(productPrice),
+                        image: productImage || null,
+                        quantity: 1
+                    });
+                }
+                localStorage.setItem("cart", JSON.stringify(cart));
+
+                // 3. Fire global cartUpdated event (navbar badge + all listeners)
+                window.dispatchEvent(new Event("cartUpdated"));
+
+                // 4. Also directly update the navbar badge for instant feedback
+                const badge = document.getElementById('global-cart-count');
+                if (badge) {
+                    const totalQty = cart.reduce((acc, item) => acc + (parseInt(item.quantity) || 0), 0);
+                    badge.textContent = totalQty;
+                    badge.style.display = totalQty > 0 ? 'flex' : 'none';
+                }
+
+                // 5. Success animation
+                btn.innerHTML = '✓ Added';
+                btn.style.background = '#10b981';
+                btn.style.transform = 'scale(1.1)';
+                setTimeout(() => { btn.style.transform = 'scale(1)'; }, 150);
+
+                // 6. Global toast notification
+                showToast(`${productName} added to cart`, 'success');
+
+                // Reset button after delay
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = 'var(--green)';
+                    btn.disabled = false;
+                }, 2500);
+            } else {
+                btn.innerHTML = '✗ Error';
+                btn.style.background = '#ef4444';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = 'var(--green)';
+                    btn.disabled = false;
+                }, 2000);
+            }
+        } catch (e) {
+            console.error('Chatbot Add to Cart Error:', e);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+
+    function showBotMsg(text) {
+        const msgHtml = `
+            <div class="chat-msg bot-msg" style="background:white; color:#334155; padding:16px; border-radius:20px 20px 20px 4px; max-width:90%; font-size:14px; line-height:1.6; box-shadow:0 4px 15px rgba(0,0,0,0.03); border:1px solid #f1f5f9;">
+                ${text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<b>$1</b>')}
+            </div>
+        `;
+        chatMsgs.insertAdjacentHTML('beforeend', msgHtml);
+        chatMsgs.scrollTo({ top: chatMsgs.scrollHeight, behavior: 'smooth' });
+    }
+</script>
+<style>
+    .chat-msg.user-msg { animation: msg-slide-right 0.4s ease forwards; opacity:0; }
+    .chat-msg.bot-msg { animation: msg-slide-left 0.4s ease forwards; opacity:0; }
+    @keyframes msg-slide-right { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes msg-slide-left { from { opacity:0; transform:translateX(-20px); } to { opacity:1; transform:translateX(0); } }
+</style>
+{% endif %}
+
+<!-- ═══ LOGIN MODAL ═══ -->
+{% if not user.is_authenticated %}
+<div id="login-overlay" onclick="closeLoginModal()"></div>
+
+<div id="login-modal">
+  <div style="display:grid;grid-template-columns:1.05fr 1fr;">
+
+    <!-- LEFT PANEL -->
+    <div class="ml-left">
+      <div class="ml-brand">
+        <div class="ml-brand-icon">🛒</div>
+        <span class="ml-brand-name"><span style="color:#ffffff;">Grod</span><span style="color:#ffc107;">iur</span></span>
+      </div>
+
+      <div class="ml-center">
+        <div class="ml-pill">
+          <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Fresh Groceries in Minutes
+        </div>
+        <h2 class="ml-heading">Everything you need,<br/><span>delivered fresh</span></h2>
+        <p class="ml-sub">From farm to your doorstep — fresh vegetables, fruits & daily essentials.</p>
+      </div>
+
+      <div class="ml-feats">
+        <div class="ml-feat">
+          <div class="ml-feat-icon">
+            <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+          </div>
+          <span class="ml-feat-label">Quality</span>
+        </div>
+        <div class="ml-feat">
+          <div class="ml-feat-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+          </div>
+          <span class="ml-feat-label">On Time</span>
+        </div>
+        <div class="ml-feat">
+          <div class="ml-feat-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 9h18l-2 11H5L3 9z"/><path d="M7 9V6a5 5 0 0110 0v3"/></svg>
+          </div>
+          <span class="ml-feat-label">Easy Returns</span>
+        </div>
+        <div class="ml-feat">
+          <div class="ml-feat-icon">
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <span class="ml-feat-label">Free Delivery</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="ml-right">
+      <button class="ml-close" onclick="closeLoginModal()">✕</button>
+
+      <!-- STEP 1: Input -->
+      <div id="ml-s1" class="ml-step active">
+        <h2 class="ml-h1">Login / Sign Up</h2>
+        <p class="ml-sub2">Your fresh groceries are just an OTP away.</p>
+
+        <div class="ml-tabs" style="display:none;">
+          <button id="ml-tab-email" class="ml-tab active" onclick="mlTab('email')">📧 Email</button>
+          <button id="ml-tab-phone" class="ml-tab" onclick="mlTab('phone')">📱 Phone</button>
+        </div>
+
+        <div id="ml-e1" class="ml-err"></div>
+
+        <div class="ml-inp-wrap">
+          <input id="ml-id" type="text" placeholder="Enter Phone number or Email ID" class="ml-inp"
+            onkeydown="if(event.key==='Enter')mlSend()" style="padding-left:16px;"/>
+        </div>
+
+        <button id="ml-send" class="ml-btn" onclick="mlSend()">Continue →</button>
+
+        <div class="ml-divider"><span>or continue with</span></div>
+
+        <a class="ml-btn-google" href="/accounts/google/login/" style="text-decoration:none;">
+          <svg width="18" height="18" viewBox="0 0 24 24">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          Continue with Google
+        </a>
+
+        <p class="ml-legal">By continuing, I accept Grodiur's <a href="#">Terms</a> & <a href="#">Privacy Policy</a></p>
+      </div>
+
+      <!-- STEP 2: OTP -->
+      <div id="ml-s2" class="ml-step">
+        <h2 class="ml-h1">Login / Sign Up</h2>
+        <p class="ml-sub2">Your fresh groceries are just an OTP away.</p>
+        
+        <p class="ml-sub2" style="font-size:13px;color:#64748b;margin:24px 0 16px;">Enter the 6-digit code sent to <span id="ml-sentto" style="font-weight:600;color:#1e293b;"></span></p>
+
+        <!-- OTP BOXES - FIXED GRID -->
+        <div class="ml-otp-grid">
+          <input type="text" maxlength="1" class="ml-otp-box" inputmode="numeric"
+            oninput="mlOtpIn(this,0)" onkeydown="mlOtpKey(event,0)"/>
+          <input type="text" maxlength="1" class="ml-otp-box" inputmode="numeric"
+            oninput="mlOtpIn(this,1)" onkeydown="mlOtpKey(event,1)"/>
+          <input type="text" maxlength="1" class="ml-otp-box" inputmode="numeric"
+            oninput="mlOtpIn(this,2)" onkeydown="mlOtpKey(event,2)"/>
+          <input type="text" maxlength="1" class="ml-otp-box" inputmode="numeric"
+            oninput="mlOtpIn(this,3)" onkeydown="mlOtpKey(event,3)"/>
+          <input type="text" maxlength="1" class="ml-otp-box" inputmode="numeric"
+            oninput="mlOtpIn(this,4)" onkeydown="mlOtpKey(event,4)"/>
+          <input type="text" maxlength="1" class="ml-otp-box" inputmode="numeric"
+            oninput="mlOtpIn(this,5)" onkeydown="mlOtpKey(event,5)"/>
+        </div>
+
+        <div id="ml-ok2" style="display:none;color:#10b981;font-size:13px;font-weight:600;text-align:center;margin-bottom:16px;">Login successful!</div>
+        <div id="ml-e2" class="ml-err"></div>
+
+        <button id="ml-resend-btn" class="ml-btn" style="background:none;color:#a855f7;border:1px solid #f3e8ff;margin-bottom:8px;" onclick="mlResend()" disabled>
+          Resend OTP in 19s
+        </button>
+        <button onclick="mlBack()" style="width:100%;background:none;border:none;color:#64748b;font-size:14px;font-weight:600;padding:12px;cursor:pointer;margin-bottom:12px;">Back</button>
+
+        <p class="ml-legal" style="margin-top:24px;">By continuing, I accept Grodiur's <a href="#">Terms & Conditions</a> & <a href="#">Privacy Policy.</a></p>
+      </div>
+
+      <!-- STEP 3: New user -->
+      <div id="ml-s3" class="ml-step">
+        <h2 class="ml-h1">Complete Profile 🎉</h2>
+        <p class="ml-sub2">Just a few details to set up your account</p>
+
+        <div id="ml-e3" class="ml-err"></div>
+
+        <div style="display:flex;gap:10px;margin-bottom:12px;">
+          <div class="ml-inp-wrap" style="flex:1;margin-bottom:0;">
+            <span class="ml-inp-icon">👤</span>
+            <input id="ml-first" type="text" placeholder="First name" class="ml-inp"/>
+          </div>
+          <div class="ml-inp-wrap" style="flex:1;margin-bottom:0;">
+            <span class="ml-inp-icon">👤</span>
+            <input id="ml-last" type="text" placeholder="Last name" class="ml-inp"/>
+          </div>
+        </div>
+
+        <div id="ml-phonewrap" class="ml-inp-wrap">
+          <span class="ml-inp-icon">📱</span>
+          <input id="ml-regphone" type="tel" placeholder="Phone number (optional)" class="ml-inp"/>
+        </div>
+
+        <button class="ml-btn" onclick="mlRegDone()">🛒 Start Shopping →</button>
+        <p class="ml-legal">Your details are safe with us. We never share your data.</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const mlCSRF = '{{ csrf_token }}';
+let mlMode = 'email', mlId = '', mlTmr;
+
+/* ── Modal ── */
+function openLoginModal() {
+  document.getElementById('login-modal').style.display = 'block';
+  document.getElementById('login-overlay').style.display = 'block';
+  document.getElementById('login-modal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('ml-id').focus(), 400);
+}
+function closeLoginModal() {
+  document.getElementById('login-modal').style.display = 'none';
+  document.getElementById('login-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLoginModal(); });
+
+/* ── Steps ── */
+function mlShow(id) {
+  ['ml-s1','ml-s2','ml-s3'].forEach(s => document.getElementById(s).classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ── Messages ── */
+function mlErr(id, m) { const e=document.getElementById(id); e.textContent='❌ '+m; e.style.display='block'; }
+function mlOk(id, m)  { const e=document.getElementById(id); e.textContent='✅ '+m; e.style.display='block'; }
+function mlHide(id)   { document.getElementById(id).style.display='none'; }
+
+function gToast(msg, type='ok') {
+  const t = document.getElementById('g-toast');
+  if (!t) return;
+  t.textContent = (type==='ok'?'✅ ':'❌ ') + msg;
+  t.className = 'g-toast ' + type;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3500);
+}
+window.showToastMsg = gToast; // Global alias for other templates
+
+/* ── Tab ── */
+function mlTab(mode) {
+  mlMode = mode;
+  document.getElementById('ml-tab-email').classList.toggle('active', mode==='email');
+  document.getElementById('ml-tab-phone').classList.toggle('active', mode==='phone');
+  const inp = document.getElementById('ml-id');
+  const icon = document.getElementById('ml-icon');
+  if (mode === 'email') {
+    inp.type='email'; inp.placeholder='Enter email address'; icon.textContent='📧';
+  } else {
+    inp.type='tel'; inp.placeholder='Enter 10-digit phone number'; icon.textContent='📱';
+  }
+  inp.value=''; mlHide('ml-e1');
+}
+
+/* ── Send OTP ── */
+async function mlSend() {
+  let val = document.getElementById('ml-id').value.trim();
+  if (!val) { mlErr('ml-e1','Please enter your phone number or email'); return; }
+  
+  if (/^\d{10}$/.test(val)) {
+    mlMode = 'phone';
+  } else if (/\S+@\S+\.\S+/.test(val)) {
+    mlMode = 'email';
+  } else {
+    mlErr('ml-e1','Enter a valid 10-digit number or email ID'); return;
+  }
+
+  mlId = val;
+  const btn = document.getElementById('ml-send');
+  btn.innerHTML = '<span class="ml-spinner"></span> Sending...'; btn.disabled = true;
+  mlHide('ml-e1');
+
+  try {
+    const ep = mlMode==='email' ? '/api/send-email-otp/' : '/api/send-phone-otp/';
+    const res = await fetch(ep, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':mlCSRF},
+      body: JSON.stringify(mlMode==='email' ? {email:val} : {phone:val})
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      document.getElementById('ml-sentto').textContent = val;
+      mlShow('ml-s2');
+      mlTimer(59);
+      setTimeout(() => document.querySelectorAll('.ml-otp-box')[0].focus(), 150);
+      if (data.dev_otp) mlOk('ml-ok2', 'Dev OTP: ' + data.dev_otp);
+    } else {
+      const msg = data.error || 'Failed to send OTP';
+      mlErr('ml-e1', msg.includes('rate') ? 'Too many requests! Wait a few minutes.' : msg);
+    }
+  } catch(e) { mlErr('ml-e1','Network error. Is the server running?'); }
+
+  btn.innerHTML = 'Continue →'; btn.disabled = false;
+}
+
+/* ── Verify OTP ── */
+async function mlVerify() {
+  const otp = [...document.querySelectorAll('.ml-otp-box')].map(b=>b.value).join('');
+  if (otp.length < 6) { mlErr('ml-e2','Please enter all 6 digits'); return; }
+
+  const btn = document.getElementById('ml-verify');
+  if (btn) { btn.innerHTML = '<span class="ml-spinner"></span> Verifying...'; btn.disabled = true; }
+  mlHide('ml-e2');
+
+  try {
+    const ep = mlMode==='email' ? '/api/verify-email-otp/' : '/api/verify-phone-otp/';
+    const res = await fetch(ep, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':mlCSRF},
+      body: JSON.stringify(mlMode==='email' ? {email:mlId,otp} : {phone:mlId,otp})
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      clearInterval(mlTmr);
+      localStorage.setItem('access_token', data.tokens.access);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      if (data.is_new_user) {
+        if (mlMode==='phone') {
+          document.getElementById('ml-regphone').value = mlId;
+          document.getElementById('ml-phonewrap').style.display = 'none';
+        } else {
+          // Extract name from email
+          const prefix = mlId.split('@')[0];
+          const parts = prefix.split(/[._-]/);
+          if (parts.length > 0) {
+            document.getElementById('ml-first').value = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+            if (parts.length > 1) {
+              document.getElementById('ml-last').value = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+            }
+          }
+        }
+        mlShow('ml-s3');
+      } else {
+        const ob = document.querySelectorAll('.ml-otp-box');
+        ob.forEach(b => b.style.borderColor = '#c084fc');
+        const m = document.getElementById('ml-ok2');
+        m.style.display = 'block';
+        m.textContent = 'Login successful!';
+        document.getElementById('ml-resend-btn').style.display = 'none';
+        
+        gToast('Login Successful! Redirecting... 🎉');
+        setTimeout(() => { closeLoginModal(); window.location.reload(); }, 1200);
+      }
+    } else {
+      mlErr('ml-e2', data.error || 'Invalid OTP. Try again.');
+      document.querySelectorAll('.ml-otp-box').forEach(b => { b.value=''; b.classList.remove('filled'); });
+      document.querySelectorAll('.ml-otp-box')[0].focus();
+      const vb = document.getElementById('ml-verify');
+      if (vb) { vb.innerHTML = '✅ Verify & Continue'; vb.disabled = false; }
+    }
+  } catch(e) {
+    mlErr('ml-e2','Network error. Please try again.');
+    btn.innerHTML = '✅ Verify & Continue'; btn.disabled = false;
+  }
+}
+
+/* ── Complete registration ── */
+async function mlRegDone() {
+  const first = document.getElementById('ml-first').value.trim();
+  if (!first) { mlErr('ml-e3','Please enter your first name'); return; }
+  const last = document.getElementById('ml-last').value.trim();
+  try {
+    await fetch('/accounts/update-name/', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':mlCSRF},
+      body: JSON.stringify({first_name:first, last_name:last})
+    });
+  } catch(e) {}
+  gToast('Welcome to Grodiur! 🎉');
+  closeLoginModal();
+  window.location.reload();
+}
+
+/* ── Resend ── */
+async function mlResend() {
+  document.querySelectorAll('.ml-otp-box').forEach(b => { b.value=''; b.classList.remove('filled'); });
+  mlHide('ml-e2'); mlHide('ml-ok2');
+  document.getElementById('ml-resend').style.display = 'none';
+
+  const ep = mlMode==='email' ? '/api/send-email-otp/' : '/api/send-phone-otp/';
+  try {
+    const res = await fetch(ep, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':mlCSRF},
+      body: JSON.stringify(mlMode==='email' ? {email:mlId} : {phone:mlId})
+    });
+    const data = await res.json();
+    if (res.ok) {
+      mlTimer(59);
+      document.querySelectorAll('.ml-otp-box')[0].focus();
+      if (data.dev_otp) mlOk('ml-ok2', 'New OTP: ' + data.dev_otp);
+    } else { mlErr('ml-e2', data.error || 'Could not resend'); }
+  } catch(e) { mlErr('ml-e2','Network error'); }
+}
+
+/* ── Back ── */
+function mlBack() {
+  clearInterval(mlTmr);
+  document.querySelectorAll('.ml-otp-box').forEach(b => { b.value=''; b.classList.remove('filled'); });
+  mlHide('ml-e2'); mlHide('ml-ok2');
+  const vb = document.getElementById('ml-verify');
+  vb.innerHTML = '✅ Verify & Continue'; vb.disabled = false; vb.style.background = '';
+  mlShow('ml-s1');
+}
+
+/* ── OTP box logic ── */
+function mlOtpIn(inp, idx) {
+  inp.value = inp.value.replace(/\D/g,'');
+  inp.classList.toggle('filled', !!inp.value);
+  if (inp.value && idx < 5) document.querySelectorAll('.ml-otp-box')[idx+1].focus();
+  if (idx === 5 && inp.value) {
+    // Auto submit!
+    const vb = document.getElementById('ml-verify');
+    if (vb) { vb.innerHTML = '⏳ Verifying...'; vb.disabled = true; }
+    mlVerify();
+  }
+}
+function mlOtpKey(e, idx) {
+  if (e.key === 'Backspace') {
+    const boxes = document.querySelectorAll('.ml-otp-box');
+    boxes[idx].classList.remove('filled');
+    if (!boxes[idx].value && idx > 0) boxes[idx-1].focus();
+  }
+}
+
+/* ── Timer ── */
+function mlTimer(s) {
+  clearInterval(mlTmr);
+  const btn = document.getElementById('ml-resend-btn');
+  btn.style.display = 'block';
+  btn.disabled = true;
+  btn.style.borderColor = '#f3e8ff';
+  btn.style.color = '#c084fc';
+  btn.textContent = `Resend OTP in ${s}s`;
+  mlTmr = setInterval(() => {
+    s--;
+    if (s > 0) { btn.textContent = `Resend OTP in ${s}s`; }
+    else { 
+      clearInterval(mlTmr); 
+      btn.disabled = false; 
+      btn.textContent = 'Resend OTP'; 
+      btn.style.borderColor = '#a855f7';
+      btn.style.color = '#a855f7';
+    }
+  }, 1000);
+}
+</script>
+{% endif %}
+
+</body>
+</html>

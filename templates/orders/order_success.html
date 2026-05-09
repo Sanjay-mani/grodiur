@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Confetti Canvas -->
+<canvas id="confetti-canvas" style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:10000;"></canvas>
+
+<style>
+    :root {
+        --success-green: #0c831f;
+        --success-bg: #f0fdf4;
+    }
+    
+    /* 1. Page Entry Animation */
+    @keyframes pageIn {
+        from { opacity: 0; transform: translateY(20px); filter: blur(10px); }
+        to { opacity: 1; transform: translateY(0); filter: blur(0); }
+    }
+    
+    .success-container { 
+        max-width: 600px; margin: 40px auto 80px; padding: 0 20px; text-align: center; 
+        animation: pageIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    
+    /* 2. Confetti Icon Animation */
+    @keyframes celebFloat {
+        0%, 100% { transform: translateY(0) rotate(-5deg) scale(1); }
+        50% { transform: translateY(-10px) rotate(5deg) scale(1.05); }
+    }
+    @keyframes iconIn {
+        from { transform: scale(0.5); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+    
+    .success-icon-wrapper {
+        width: 100px; height: 100px; background: var(--success-bg); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;
+        animation: iconIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    .success-icon { 
+        font-size: 50px; 
+        animation: celebFloat 3s ease-in-out infinite 0.6s;
+        display: inline-block;
+    }
+
+    /* 3. Order Confirmed Text (Blur-to-Clear) */
+    @keyframes blurClear {
+        from { filter: blur(8px); opacity: 0; }
+        to { filter: blur(0); opacity: 1; }
+    }
+    .success-title { 
+        font-size: 36px; font-weight: 800; color: #0f172a; margin-bottom: 8px; letter-spacing: -1px; 
+        animation: blurClear 0.8s ease-out 0.2s forwards; opacity: 0;
+    }
+
+    /* 4. Delivery Time Text */
+    @keyframes slideUp {
+        from { transform: translateY(10px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    .delivery-msg { 
+        font-size: 16px; color: #64748b; font-weight: 600; margin-bottom: 48px; 
+        display: flex; align-items: center; justify-content: center; gap: 8px; 
+        animation: slideUp 0.6s ease-out 0.4s forwards; opacity: 0;
+    }
+    .delivery-msg span { color: var(--success-green); }
+
+    /* 5. Details Card & Row Animation */
+    @keyframes cardIn {
+        from { opacity: 0; transform: translateY(15px); box-shadow: 0 4px 10px rgba(0,0,0,0); }
+        to { opacity: 1; transform: translateY(0); box-shadow: 0 10px 40px rgba(0,0,0,0.04); }
+    }
+    .order-summary-card { 
+        background: #f8fafc; border-radius: 20px; padding: 24px; margin-bottom: 32px; text-align: left; 
+        animation: cardIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards; opacity: 0;
+    }
+    
+    @keyframes rowFadeIn {
+        from { opacity: 0; transform: translateX(-5px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    .summary-row { 
+        display: flex; justify-content: space-between; align-items: center; padding: 10px 0; 
+        border-bottom: 1px solid rgba(0,0,0,0.03); opacity: 0; animation: rowFadeIn 0.5s ease-out forwards;
+    }
+    .summary-row:nth-child(1) { animation-delay: 0.7s; }
+    .summary-row:nth-child(2) { animation-delay: 0.8s; }
+    .summary-row:nth-child(3) { animation-delay: 0.9s; }
+    .summary-row:nth-child(4) { animation-delay: 1.0s; }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-label { font-size: 13px; font-weight: 600; color: #64748b; }
+    .summary-value { font-size: 14px; font-weight: 700; color: #0f172a; }
+
+    /* 6. Status Pulse Animation */
+    @keyframes statusGlow {
+        0% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(12, 131, 31, 0)); }
+        50% { transform: scale(1.05); filter: drop-shadow(0 0 8px rgba(12, 131, 31, 0.4)); }
+        100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(12, 131, 31, 0)); }
+    }
+    .status-confirmed { 
+        color: var(--success-green); 
+        animation: statusGlow 1.2s ease-in-out 1.2s 1; 
+        display: inline-block;
+    }
+
+    /* 7. Action Buttons */
+    .action-buttons { display: flex; flex-direction: column; gap: 14px; margin-bottom: 32px; }
+    
+    .btn-track {
+        background: linear-gradient(135deg, var(--success-green), #15803d); color: white; border: none; padding: 18px;
+        border-radius: 16px; font-weight: 800; font-size: 17px; text-decoration: none;
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 8px 20px rgba(12, 131, 31, 0.2);
+        opacity: 0; animation: slideUp 0.6s ease-out 1s forwards;
+    }
+    .btn-track:hover { 
+        transform: translateY(-3px) scale(1.02); 
+        box-shadow: 0 12px 30px rgba(12, 131, 31, 0.4);
+        filter: brightness(1.1);
+    }
+    .btn-track:active { transform: scale(0.98); }
+
+    .btn-invoice {
+        background: white; color: #1e293b; border: 1.5px solid #e2e8f0; padding: 16px;
+        border-radius: 16px; font-weight: 700; font-size: 15px; text-decoration: none;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        transition: all 0.3s;
+        opacity: 0; animation: slideUp 0.6s ease-out 1.1s forwards;
+    }
+    .btn-invoice:hover { background: #f8fafc; border-color: var(--success-green); box-shadow: 0 4px 15px rgba(12, 131, 31, 0.1); transform: translateY(-1px); }
+
+    /* 9. Continue Shopping */
+    .continue-shopping {
+        color: var(--success-green); font-weight: 700; text-decoration: none; font-size: 15px;
+        display: inline-flex; align-items:center; gap: 8px; transition: all 0.3s;
+        position: relative; padding-bottom: 2px;
+        opacity: 0; animation: slideUp 0.6s ease-out 1.2s forwards;
+    }
+    .continue-shopping::after {
+        content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 2px;
+        background: var(--success-green); transition: width 0.3s ease;
+    }
+    .continue-shopping:hover { gap: 14px; }
+    .continue-shopping:hover::after { width: 100%; }
+    .continue-shopping svg { transition: transform 0.3s ease; }
+    .continue-shopping:hover svg { transform: translateX(4px); }
+</style>
+
+<div class="success-container">
+    <!-- Icon & Title -->
+    <div class="success-icon-wrapper">
+        <div class="success-icon">🎉</div>
+    </div>
+    <h2 class="success-title">Order Confirmed!</h2>
+    <p class="delivery-msg">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Estimated delivery in <span>10–20 minutes</span>
+    </p>
+
+    <!-- Summary -->
+    <div class="order-summary-card">
+        <div class="summary-row">
+            <span class="summary-label">Order ID</span>
+            <span class="summary-value" style="font-family: monospace; letter-spacing: 0.5px;">{{ order.order_id }}</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Placed on</span>
+            <span class="summary-value" id="order-date-label">Loading...</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-label">Status</span>
+            <span class="summary-value status-confirmed">Confirmed</span>
+        </div>
+        <div class="summary-row" style="border-top: 1px dashed #cbd5e1; margin-top: 8px; padding-top: 16px;">
+            <span class="summary-label" style="color: #0f172a; font-size: 15px;">
+                {% if order.payment_method == 'COD' %}Amount Payable on Delivery (COD PENDING){% else %}Amount Paid{% endif %}
+            </span>
+            <span class="summary-value" style="color: var(--success-green); font-size: 18px;">₹{{ order.total_price }}</span>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="action-buttons">
+        <a href="{% url 'order_detail' order.order_id %}" class="btn-track">
+            Track Order
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </a>
+        <button onclick="openInvoice('{{ order.id }}')" class="btn-invoice">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            View Invoice
+        </button>
+    </div>
+
+    <a href="{% url 'home' %}" class="continue-shopping">
+        Continue Shopping 
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+</div>
+
+<!-- Confetti Script -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script>
+    // 1. Confetti Burst
+    window.addEventListener('load', () => {
+        const duration = 3 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
+
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        const interval = setInterval(function() {
+            const timeLeft = animationEnd - Date.now();
+            if (timeLeft <= 0) return clearInterval(interval);
+
+            const particleCount = 50 * (timeLeft / duration);
+            confetti(Object.assign({}, defaults, { 
+                particleCount, 
+                origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } 
+            }));
+            confetti(Object.assign({}, defaults, { 
+                particleCount, 
+                origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } 
+            }));
+        }, 250);
+    });
+
+    // 2. Date Formatting
+    const rawDate = "{{ order.created_at.isoformat }}";
+    document.getElementById('order-date-label').textContent = new Date(rawDate).toLocaleString("en-IN", {
+        day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true
+    });
+
+    // 3. Cart Cleanup
+    localStorage.removeItem("cart");
+    localStorage.removeItem("appliedCoupon");
+    localStorage.removeItem("cartSummary");
+    window.dispatchEvent(new Event("cartUpdated"));
+</script>
+
+{% endblock %}

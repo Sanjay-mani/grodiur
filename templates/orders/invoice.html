@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice - {{ order.order_id }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { margin: 0; padding: 40px; background: #f1f5f9; color: #1e293b; }
+        .invoice-card { max-width: 1000px; margin: auto; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
+        
+        .header { background: #0c831f; padding: 40px; color: white; display: flex; justify-content: space-between; align-items: center; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .brand h1 { font-size: 36px; font-weight: 800; margin: 0; letter-spacing: -1px; }
+        .brand p { font-size: 14px; opacity: 0.9; margin: 4px 0 0; }
+        
+        .meta { text-align: right; }
+        .meta .label { font-size: 12px; font-weight: 600; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
+        .meta .id { font-size: 20px; font-weight: 800; margin: 4px 0; }
+        .meta .date { font-size: 14px; opacity: 0.9; }
+
+        .info-section { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid #f1f5f9; }
+        .info-col { padding: 40px; }
+        .info-col:first-child { border-right: 1px solid #f1f5f9; }
+        .info-label { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; display: block; }
+        .info-name { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+        .info-text { font-size: 14px; color: #64748b; font-weight: 500; line-height: 1.6; }
+
+        .method-badge { display: inline-block; background: #f0fdf4; color: #166534; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; margin-top: 16px; border: 1px solid #bbf7d0; text-transform: uppercase; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .method-badge.pending { background: #fff7ed; color: #c2410c; border-color: #ffedd5; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 0; }
+        th { background: #f8fafc; padding: 16px 40px; text-align: left; font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px; }
+        td { padding: 24px 40px; border-bottom: 1px solid #f1f5f9; font-size: 14px; font-weight: 600; color: #1e293b; }
+        .prod-unit { font-size: 12px; color: #94a3b8; font-weight: 500; display: block; margin-top: 4px; }
+
+        .footer { padding: 40px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .totals p { margin: 10px 0; font-size: 14px; font-weight: 600; color: #64748b; }
+        .totals p strong { color: #0f172a; font-size: 16px; font-weight: 800; }
+
+        .print-btn { background: #0c831f; color: white; border: none; border-radius: 12px; padding: 14px 28px; font-weight: 700; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(12,131,31,0.25); text-decoration: none; }
+        .print-btn:hover { background: #0a6d1a; transform: translateY(-1px); }
+
+        .thanks { color: #0c831f; font-weight: 800; font-size: 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+
+        @media print {
+            body { padding: 0; background: white; }
+            .invoice-card { box-shadow: none; border: none; }
+            .print-btn { display: none; }
+            .header { background-color: #0c831f !important; color: white !important; }
+            .brand h1 span { color: #fbbf24 !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="invoice-card">
+    <div class="header">
+        <div class="brand">
+            <h1>Grod<span style="color: #fbbf24;">iur</span></h1>
+            <p>Fresh groceries, delivered fast</p>
+        </div>
+        <div class="meta">
+            <div class="label">INVOICE</div>
+            <div class="id">{{ order.order_id }}</div>
+            <div class="date">{{ order.created_at|date:"d M Y, g:i A" }}</div>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <div class="info-col">
+            <span class="info-label">BILLED TO</span>
+            <div class="info-name">{{ order.full_name }}</div>
+            <div class="info-text">📞 {{ order.phone }}</div>
+        </div>
+        <div class="info-col">
+            <span class="info-label">DELIVERY ADDRESS</span>
+            <div class="info-text">
+                {{ order.address }}<br>
+                {{ order.city }} – {{ order.pincode }}
+            </div>
+            <span class="method-badge {% if order.payment_method == 'COD' %}{% if order.status == 'delivered' %}paid{% else %}pending{% endif %}{% else %}{{ order.payment_status }}{% endif %}">
+                {{ order.payment_method }} - 
+                {% if order.payment_method == 'COD' %}
+                    {% if order.status == 'delivered' %}PAID (CASH COLLECTED){% else %}PENDING (PAY ON DELIVERY){% endif %}
+                {% else %}
+                    {{ order.payment_status|upper }}
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 50%;">PRODUCT</th>
+                <th style="text-align: center;">QTY</th>
+                <th style="text-align: right;">UNIT PRICE</th>
+                <th style="text-align: right;">SUBTOTAL</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.items.all %}
+            <tr>
+                <td>
+                    {{ item.product.name }}
+                    <span class="prod-unit">{{ item.product.unit }}</span>
+                </td>
+                <td style="text-align: center;">{{ item.quantity }}</td>
+                <td style="text-align: right;">₹{{ item.price }}</td>
+                <td style="text-align: right;">₹{{ item.get_subtotal }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <div>
+            <div class="totals">
+                <p>Item Total: <strong>₹{{ order.subtotal }}</strong></p>
+                <p>Delivery Fee: <strong style="color:#16a34a;">{% if order.delivery_fee == 0 %}FREE{% else %}₹{{ order.delivery_fee }}{% endif %}</strong></p>
+                {% if order.coupon_discount > 0 %}
+                <p>Coupon Discount: <strong style="color:#a855f7;">-₹{{ order.coupon_discount }}</strong></p>
+                {% endif %}
+                <p style="margin-top: 20px; font-size: 18px; color: #0f172a; border-top: 2px solid #f1f5f9; padding-top: 12px;">
+                    {% if order.payment_method == 'COD' %}
+                        {% if order.status == 'delivered' %}Total Amount Paid:{% else %}Amount Payable on Delivery:{% endif %}
+                    {% else %}
+                        {% if order.payment_status == 'paid' %}Total Amount Paid:{% else %}Total Amount to Pay:{% endif %}
+                    {% endif %} 
+                    <strong>₹{{ order.total_price }}</strong>
+                </p>
+            </div>
+            <div style="margin-top: 32px;">
+                <div class="thanks">🙏 Thank you for shopping with Grodiur!</div>
+                <div style="font-size: 12px; color: #94a3b8; font-weight: 500;">Order placed on {{ order.created_at|date:"d M Y, g:i A" }}</div>
+            </div>
+        </div>
+        
+        <button class="print-btn" onclick="window.print()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            Print / Save PDF
+        </button>
+    </div>
+</div>
+
+</body>
+</html>

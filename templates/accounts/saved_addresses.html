@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .address-page { max-width: 800px; margin: 0 auto; padding: 40px 20px; transition: all 0.3s ease; }
+    .address-title { font-size: 24px; font-weight: 800; color: var(--text-main); margin-bottom: 32px; }
+    
+    .address-card { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border-color); padding: 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; transition: all 0.3s ease; position: relative; box-shadow: var(--card-shadow); }
+    .address-card.is-default { border-color: var(--green); background: rgba(45, 106, 79, 0.05); }
+    
+    .address-info { flex: 1; }
+    .address-name { font-size: 18px; font-weight: 800; color: var(--text-main); margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+    .default-badge { background: var(--input-bg); color: var(--text-sec); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; border: 1px solid var(--border-color); }
+    .address-details { font-size: 14px; color: var(--text-sec); font-weight: 500; line-height: 1.6; }
+    
+    .address-radio { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+    .is-default .address-radio { border-color: var(--green); }
+    .radio-inner { width: 12px; height: 12px; border-radius: 50%; background: transparent; transition: background 0.2s; }
+    .is-default .radio-inner { background: var(--green); }
+
+    .add-btn { width: 100%; padding: 20px; border: 2px dashed var(--border-color); border-radius: 16px; background: var(--card-bg); color: var(--green); font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: all 0.2s; margin-top: 24px; }
+    .add-btn:hover { background: var(--input-bg); border-color: var(--green); }
+
+    /* Actions */
+    .address-actions { position: absolute; bottom: 20px; right: 24px; display: flex; gap: 16px; font-size: 13px; font-weight: 700; color: var(--green); opacity: 0; transition: opacity 0.2s; }
+    .address-card:hover .address-actions { opacity: 1; }
+    .action-btn { cursor: pointer; text-decoration: none; color: inherit; }
+    .action-btn.delete { color: #ef4444; }
+
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; backdrop-filter: blur(6px); }
+    .modal-content { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--card-bg); color: var(--text-main); border-radius: 24px; padding: 32px; width: 95%; max-width: 500px; z-index: 10000; box-shadow: var(--card-shadow); border: 1px solid var(--border-color); }
+</style>
+
+<div class="address-page">
+    <h2 class="address-title">Saved Addresses</h2>
+
+    <div id="address-container">
+        {% for addr in addresses %}
+        <div class="address-card {% if addr.is_default %}is-default{% endif %}" id="addr-{{ addr.id }}">
+            <div class="address-info">
+                <div class="address-name">
+                    {{ addr.full_name }}
+                    {% if addr.is_default %}
+                    <span class="default-badge">DEFAULT</span>
+                    {% endif %}
+                </div>
+                <div class="address-details">
+                    {{ addr.house_street }}<br>
+                    {{ addr.city }}, {{ addr.pincode }}<br>
+                    Phone: {{ addr.phone }}
+                </div>
+            </div>
+            
+            <div class="address-radio" onclick="setDefault({{ addr.id }})">
+                <div class="radio-inner"></div>
+            </div>
+
+            <div class="address-actions">
+                <div class="action-btn" onclick="editAddress({{ addr.id }}, '{{ addr.full_name }}', '{{ addr.phone }}', '{{ addr.house_street }}', '{{ addr.city }}', '{{ addr.pincode }}')">Edit</div>
+                <div class="action-btn delete" onclick="deleteAddress({{ addr.id }})">Delete</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <button class="add-btn" onclick="openAddModal()">
+        <span>+</span> Add New Address
+    </button>
+</div>
+
+<!-- Add/Edit Modal -->
+<div id="addr-modal-overlay" class="modal-overlay" onclick="closeModal()"></div>
+<div id="addr-modal" class="modal-content">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h4 style="font-weight:800; color:var(--text-main); margin:0;" id="modal-title">Add New Address</h4>
+        <button onclick="closeModal()" style="background:none; border:none; color:var(--text-sec); font-size:20px; cursor:pointer;">✕</button>
+    </div>
+    <form id="address-form">
+        {% csrf_token %}
+        <input type="hidden" id="addr-id">
+        <div class="mb-3">
+            <label style="display:block; font-size:12px; font-weight:700; color:var(--text-sec); margin-bottom:8px;">FULL NAME</label>
+            <input type="text" id="in-name" class="form-control" style="background:var(--input-bg); color:var(--text-main); border:1.5px solid var(--border-color); border-radius:12px; padding:12px;" required>
+        </div>
+        <div class="mb-3">
+            <label style="display:block; font-size:12px; font-weight:700; color:var(--text-sec); margin-bottom:8px;">PHONE NUMBER</label>
+            <input type="text" id="in-phone" class="form-control" style="background:var(--input-bg); color:var(--text-main); border:1.5px solid var(--border-color); border-radius:12px; padding:12px;" required>
+        </div>
+        <div class="mb-3">
+            <label style="display:block; font-size:12px; font-weight:700; color:var(--text-sec); margin-bottom:8px;">STREET / HOUSE NO</label>
+            <input type="text" id="in-street" class="form-control" style="background:var(--input-bg); color:var(--text-main); border:1.5px solid var(--border-color); border-radius:12px; padding:12px;" required>
+        </div>
+        <div class="row g-3 mb-4">
+            <div class="col-6">
+                <label style="display:block; font-size:12px; font-weight:700; color:var(--text-sec); margin-bottom:8px;">CITY</label>
+                <input type="text" id="in-city" class="form-control" style="background:var(--input-bg); color:var(--text-main); border:1.5px solid var(--border-color); border-radius:12px; padding:12px;" required>
+            </div>
+            <div class="col-6">
+                <label style="display:block; font-size:12px; font-weight:700; color:var(--text-sec); margin-bottom:8px;">PINCODE</label>
+                <input type="text" id="in-pincode" class="form-control" style="background:var(--input-bg); color:var(--text-main); border:1.5px solid var(--border-color); border-radius:12px; padding:12px;" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-grodiur w-100 py-3" style="border-radius:12px; font-weight:700;">Save Address</button>
+    </form>
+</div>
+
+<script>
+    let mode = 'add';
+
+    function openModal() {
+        document.getElementById('addr-modal-overlay').style.display = 'block';
+        document.getElementById('addr-modal').style.display = 'block';
+    }
+    function closeModal() {
+        document.getElementById('addr-modal-overlay').style.display = 'none';
+        document.getElementById('addr-modal').style.display = 'none';
+    }
+
+    function openAddModal() {
+        mode = 'add';
+        document.getElementById('modal-title').textContent = 'Add New Address';
+        document.getElementById('address-form').reset();
+        openModal();
+    }
+
+    function editAddress(id, name, phone, street, city, pin) {
+        mode = 'edit';
+        document.getElementById('modal-title').textContent = 'Edit Address';
+        document.getElementById('addr-id').value = id;
+        document.getElementById('in-name').value = name;
+        document.getElementById('in-phone').value = phone;
+        document.getElementById('in-street').value = street;
+        document.getElementById('in-city').value = city;
+        document.getElementById('in-pincode').value = pin;
+        openModal();
+    }
+
+    document.getElementById('address-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const payload = {
+            action: mode,
+            id: document.getElementById('addr-id').value,
+            full_name: document.getElementById('in-name').value,
+            phone: document.getElementById('in-phone').value,
+            house_street: document.getElementById('in-street').value,
+            city: document.getElementById('in-city').value,
+            pincode: document.getElementById('in-pincode').value
+        };
+
+        const res = await fetch("{% url 'saved_addresses' %}", {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if(data.success) { location.reload(); }
+        else { showToastMsg("Error: " + data.error, "error"); }
+    };
+
+    function deleteAddress(id) {
+        showConfirmModal({
+            title: "Delete Address?",
+            text: "Are you sure you want to delete this address? This action cannot be undone.",
+            confirmText: "Delete",
+            confirmClass: "danger",
+            onConfirm: async () => {
+                const res = await fetch("{% url 'saved_addresses' %}", {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'delete', id: id }),
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                if(data.success) location.reload();
+                else showToastMsg("Error: " + data.error, "error");
+            }
+        });
+    }
+
+    async function setDefault(id) {
+        const res = await fetch("{% url 'saved_addresses' %}", {
+            method: 'POST',
+            body: JSON.stringify({ action: 'set_default', id: id }),
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if(data.success) { location.reload(); }
+    }
+</script>
+
+{% endblock %}

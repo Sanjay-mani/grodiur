@@ -1,0 +1,419 @@
+{% extends 'base.html' %}
+{% block content %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+    body { background-color: var(--bg-color); color: var(--text-main); transition: all 0.3s ease; }
+    .checkout-container { max-width: 1000px; margin: 0 auto; padding: 24px 20px 100px; }
+    .checkout-grid { display: grid; grid-template-columns: 1fr 350px; gap: 24px; }
+    
+    .step-card { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border-color); box-shadow: var(--card-shadow); overflow: hidden; margin-bottom: 24px; transition: all 0.3s ease; }
+    .step-header { padding: 20px 24px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid var(--border-color); }
+    .step-number { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+    .step-number.active { background: var(--green); color: white; }
+    .step-number.completed { background: rgba(22, 163, 74, 0.15); color: #52b788; }
+    .step-number.inactive { background: var(--input-bg); color: var(--text-sec); }
+    .step-title { font-size: 18px; font-weight: 700; color: var(--text-main); margin: 0; }
+    
+    .step-content { padding: 24px; }
+    
+    .address-card { border: 1.5px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 16px; cursor: pointer; position: relative; transition: all 0.2s; background: var(--bg-color); }
+    .address-card.selected { border-color: var(--green); background: rgba(45, 106, 79, 0.1); }
+    .address-card:hover { border-color: var(--text-sec); }
+    .address-card.selected:hover { border-color: var(--green); }
+    .address-radio { position: absolute; right: 16px; top: 20px; width: 20px; height: 20px; accent-color: var(--green); }
+    
+    .edit-addr-btn { position: absolute; right: 48px; top: 16px; background: none; border: none; color: var(--green); font-size: 12px; font-weight: 600; cursor: pointer; }
+    .add-addr-btn { width: 100%; padding: 12px; border: 1.5px dashed var(--border-color); border-radius: 12px; background: none; color: var(--text-sec); font-weight: 600; cursor: pointer; margin-bottom: 16px; transition: all 0.2s; }
+    .add-addr-btn:hover { border-color: var(--green); color: var(--green); background: rgba(45, 106, 79, 0.05); }
+
+    .payment-option { border: 1.5px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 16px; cursor: pointer; display: flex; align-items: center; gap: 16px; transition: all 0.2s; background: var(--bg-color); }
+    .payment-option.selected { border-color: var(--green); background: rgba(45, 106, 79, 0.1); }
+    .payment-radio { width: 20px; height: 20px; accent-color: var(--green); }
+    .payment-icon { width: 40px; height: 40px; background: var(--input-bg); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    
+    .btn-primary-large { display: flex; justify-content: space-between; align-items: center; width: 100%; background: var(--green); color: white; border: none; border-radius: 12px; padding: 16px; font-weight: 700; font-size: 16px; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(5,150,105,0.3); }
+    .btn-primary-large:hover { transform: translateY(-2px); }
+    .btn-primary-large:disabled { background: var(--text-sec); opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+    
+    .summary-card { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border-color); box-shadow: var(--card-shadow); padding: 24px; position: sticky; top: 24px; transition: all 0.3s ease; }
+
+    /* Modal Styles */
+    #addr-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
+    .addr-modal { background: var(--card-bg); color: var(--text-main); border-radius: 20px; width: 90%; max-width: 500px; padding: 32px; box-shadow: var(--card-shadow); border: 1px solid var(--border-color); }
+    .modal-h { font-weight: 800; font-size: 20px; color: var(--text-main); margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
+    .modal-close { background: none; border: none; font-size: 20px; color: var(--text-sec); cursor: pointer; }
+    .inp-group { margin-bottom: 16px; }
+    .inp-label { display: block; font-size: 11px; font-weight: 700; color: var(--text-sec); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .inp-f { width: 100%; padding: 12px 16px; background: var(--input-bg); border: 1.5px solid var(--border-color); color: var(--text-main); border-radius: 10px; font-size: 14px; outline: none; transition: all 0.2s; }
+    .inp-f:focus { border-color: var(--green); background: var(--card-bg); }
+</style>
+
+<div class="checkout-container">
+    <div style="margin-bottom: 24px;">
+        <h3 style="font-weight: 800; color: var(--text-main); font-family: 'Poppins', sans-serif;">Checkout</h3>
+    </div>
+
+    <form method="POST" id="checkout-form">
+        {% csrf_token %}
+        <input type="hidden" name="place_order" value="1">
+        <input type="hidden" name="selected_address" id="selected_address" value="{% if saved_addresses %}{{ saved_addresses.first.id }}{% endif %}">
+        <input type="hidden" name="payment_method" id="payment_method" value="UPI">
+        
+        <div class="checkout-grid">
+            <div>
+                <div class="step-card" id="step1-card">
+                    <div class="step-header">
+                        <div class="step-number active" id="step1-num">1</div>
+                        <h4 class="step-title">Delivery Address</h4>
+                    </div>
+                    <div class="step-content" id="step1-content">
+                        <div id="address-list">
+                            {% for addr in saved_addresses %}
+                            <div class="address-card {% if forloop.first %}selected{% endif %}" id="addr-card-{{ addr.id }}" onclick="selectAddress('{{ addr.id }}', this)">
+                                <input type="radio" name="addr_radio" class="address-radio" {% if forloop.first %}checked{% endif %} onclick="event.stopPropagation()">
+                                <button type="button" class="edit-addr-btn" onclick="openAddrModal(true, '{{ addr.id }}'); event.stopPropagation()">Edit</button>
+                                <div style="font-weight: 700; color: var(--text-main); font-size: 15px; margin-bottom: 8px;">{{ addr.full_name }}</div>
+                                <div style="color: var(--text-sec); font-size: 13px; line-height: 1.5; padding-right: 30px;">
+                                    <span class="addr-house">{{ addr.house_street }}</span><br>
+                                    <span class="addr-city-pin">{{ addr.city }}, {{ addr.pincode }}</span><br>
+                                    Phone: <span class="addr-phone">{{ addr.phone }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <button type="button" class="add-addr-btn" onclick="openAddrModal(false)">+ Add New Address</button>
+                        
+                        <button type="button" onclick="goToStep2()" class="btn-primary-large" id="addr-continue-btn" {% if not saved_addresses %}disabled{% endif %} style="margin-top: 24px; justify-content: center;">
+                            Continue &rarr;
+                        </button>
+                    </div>
+                </div>
+
+                <div class="step-card" id="step2-card" style="opacity: 0.6; pointer-events: none;">
+                    <div class="step-header">
+                        <div class="step-number inactive" id="step2-num">2</div>
+                        <h4 class="step-title">Payment Method</h4>
+                    </div>
+                    <div class="step-content" id="step2-content" style="display: none;">
+                        <div class="payment-option selected" onclick="selectPayment('UPI', this)">
+                            <div class="payment-icon">📱</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; color: var(--text-main); font-size: 15px;">UPI (GPay, PhonePe, Paytm)</div>
+                                <div style="font-size: 11px; color: #ef4444; font-weight: 600; margin-top: 4px;">
+                                    Test mode QR may not work in real UPI apps. Use GPay/PhonePe buttons instead.
+                                </div>
+                            </div>
+                            <input type="radio" name="pay_radio" class="payment-radio" checked onclick="event.stopPropagation()">
+                        </div>
+                        <div class="payment-option" onclick="selectPayment('COD', this)">
+                            <div class="payment-icon">💵</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; color: var(--text-main); font-size: 15px;">Cash on Delivery</div>
+                            </div>
+                            <input type="radio" name="pay_radio" class="payment-radio" onclick="event.stopPropagation()">
+                        </div>
+                        <button type="button" id="place-order-btn" class="btn-primary-large" style="margin-top: 24px;" onclick="handlePlaceOrder()">
+                            <span>Place Order</span>
+                            <span>₹{{ cart.get_final_total }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="summary-card">
+                    <h6 style="margin-top: 0; margin-bottom: 20px; font-size: 16px; font-weight: 800; color: var(--text-main);">Order Summary</h6>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13.5px; color: var(--text-sec);">
+                        <span>Total Items</span>
+                        <span style="font-weight: 600; color: var(--text-main);">{{ cart.get_total_items }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px dashed var(--border-color); font-weight: 800; font-size: 18px; color: var(--text-main);">
+                        <span id="final-pay-label">Total Pay</span>
+                        <span>₹{{ cart.get_final_total }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Address Modal -->
+<div id="addr-modal-overlay">
+    <div class="addr-modal">
+        <div class="modal-h">
+            <span id="modal-title">Add New Address</span>
+            <button class="modal-close" onclick="closeAddrModal()">✕</button>
+        </div>
+        <input type="hidden" id="edit-addr-id">
+        <div class="inp-group">
+            <label class="inp-label">Full Name</label>
+            <input type="text" id="addr-name" class="inp-f" placeholder="Enter full name">
+        </div>
+        <div class="inp-group">
+            <label class="inp-label">Phone Number</label>
+            <input type="tel" id="addr-phone" class="inp-f" placeholder="10-digit number">
+        </div>
+        <div class="inp-group">
+            <label class="inp-label">House No. / Street</label>
+            <input type="text" id="addr-house" class="inp-f" placeholder="Flat, Street, Area">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="inp-group">
+                <label class="inp-label">City</label>
+                <input type="text" id="addr-city" class="inp-f" placeholder="City">
+            </div>
+            <div class="inp-group">
+                <label class="inp-label">Pincode</label>
+                <input type="text" id="addr-pin" class="inp-f" placeholder="6-digit PIN">
+            </div>
+        </div>
+        <button type="button" class="btn-primary-large" style="justify-content: center; margin-top: 12px;" onclick="saveAddress()">Save Address</button>
+    </div>
+</div>
+
+<script>
+    function selectAddress(id, element) {
+        document.getElementById('selected_address').value = id;
+        document.querySelectorAll('.address-card').forEach(el => {
+            el.classList.remove('selected');
+            el.querySelector('.address-radio').checked = false;
+        });
+        element.classList.add('selected');
+        element.querySelector('.address-radio').checked = true;
+    }
+
+    function goToStep2() {
+        document.getElementById('step1-num').classList.remove('active');
+        document.getElementById('step1-num').classList.add('completed');
+        document.getElementById('step1-num').innerHTML = '✓';
+        document.getElementById('step1-content').style.display = 'none';
+        document.getElementById('step2-card').style.opacity = '1';
+        document.getElementById('step2-card').style.pointerEvents = 'auto';
+        document.getElementById('step2-num').classList.remove('inactive');
+        document.getElementById('step2-num').classList.add('active');
+        document.getElementById('step2-content').style.display = 'block';
+    }
+
+    function selectPayment(method, element) {
+        document.getElementById('payment_method').value = method;
+        document.querySelectorAll('.payment-option').forEach(el => {
+            el.classList.remove('selected');
+            el.querySelector('.payment-radio').checked = false;
+        });
+        element.classList.add('selected');
+        element.querySelector('.payment-radio').checked = true;
+        
+        // Update label
+        const label = document.getElementById('final-pay-label');
+        if(method === 'COD') {
+            label.textContent = 'Amount to Pay';
+        } else {
+            label.textContent = 'Total Pay';
+        }
+    }
+
+    function openAddrModal(isEdit, id) {
+        document.getElementById('addr-modal-overlay').style.display = 'flex';
+        document.getElementById('modal-title').textContent = isEdit ? 'Edit Address' : 'Add New Address';
+        document.getElementById('edit-addr-id').value = id || '';
+        
+        if(isEdit) {
+            const card = document.getElementById(`addr-card-${id}`);
+            document.getElementById('addr-name').value = card.querySelector('div[style*="font-weight: 700"]').textContent;
+            document.getElementById('addr-phone').value = card.querySelector('.addr-phone').textContent;
+            document.getElementById('addr-house').value = card.querySelector('.addr-house').textContent;
+            const cityPin = card.querySelector('.addr-city-pin').textContent.split(', ');
+            document.getElementById('addr-city').value = cityPin[0];
+            document.getElementById('addr-pin').value = cityPin[1];
+        } else {
+            ['addr-name', 'addr-phone', 'addr-house', 'addr-city', 'addr-pin'].forEach(i => document.getElementById(i).value = '');
+        }
+    }
+
+    function closeAddrModal() {
+        document.getElementById('addr-modal-overlay').style.display = 'none';
+    }
+
+    async function saveAddress() {
+        const id = document.getElementById('edit-addr-id').value;
+        const fullName = document.getElementById('addr-name').value;
+        const phone = document.getElementById('addr-phone').value;
+        const house = document.getElementById('addr-house').value;
+        const city = document.getElementById('addr-city').value;
+        const pincode = document.getElementById('addr-pin').value;
+
+        // --- STRICT VALIDATION ---
+        if (!fullName.trim() || !phone.trim() || !house.trim() || !city.trim() || !pincode.trim()) {
+            showToastMsg('Please fill all fields', 'error');
+            return;
+        }
+
+        if (fullName.trim().length < 3) {
+            showToastMsg('Enter valid full name', 'error');
+            return;
+        }
+
+        const phoneRegex = /^[6-9]\d{9}$/;
+        if (!phoneRegex.test(phone.trim())) {
+            showToastMsg('Enter valid 10-digit phone number', 'error');
+            return;
+        }
+
+        const pincodeRegex = /^[1-9][0-9]{5}$/;
+        if (!pincodeRegex.test(pincode.trim())) {
+            showToastMsg('Enter valid pincode', 'error');
+            return;
+        }
+
+        const data = {
+            action: id ? 'edit' : 'add',
+            id: id,
+            full_name: fullName.trim(),
+            phone: phone.trim(),
+            house_street: house.trim(),
+            city: city.trim(),
+            pincode: pincode.trim()
+        };
+
+        try {
+            const res = await fetch("{% url 'saved_addresses' %}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify(data)
+            });
+            const resData = await res.json();
+            if(resData.success) {
+                location.reload();
+            } else {
+                showToastMsg(resData.error || 'Failed to save address', 'error');
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    function handlePlaceOrder() {
+        const method = document.getElementById('payment_method').value;
+        const total = "{{ cart.get_final_total }}";
+        
+        if (method === 'UPI') {
+            startRazorpayPayment(total);
+        } else {
+            // For COD, just submit the form
+            document.getElementById('checkout-form').submit();
+        }
+    }
+
+    function getCSRFToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+    async function startRazorpayPayment(totalAmount) {
+        const addressId = document.getElementById('selected_address').value;
+        if (!addressId) {
+            showToastMsg("Please select an address", "error");
+            return;
+        }
+
+        const response = await fetch(
+            "/orders/api/create-razorpay-order/",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken()
+                },
+                body: JSON.stringify({
+                    amount: totalAmount,
+                    address_id: addressId
+                })
+            }
+        )
+
+        const data = await response.json()
+
+        if (!data.success) {
+            showToastMsg("Unable to start payment", "error")
+            return
+        }
+
+        const options = {
+            key: data.key,
+            amount: data.amount,
+            currency: "INR",
+            name: "Grodiur",
+            description: "Groceries Payment",
+            image: "/static/images/logo.png",
+            order_id: data.order_id,
+            prefill: {
+                name: "{{ request.user.get_full_name }}",
+                email: "{{ request.user.email }}",
+                contact: "" 
+            },
+            notes: {
+                source: "grodiur_checkout"
+            },
+            theme: {
+                color: "#16a34a"
+            },
+            method: {
+                upi: true
+            },
+            config: {
+                display: {
+                    blocks: {
+                        upi: {
+                            name: "Pay using UPI",
+                            instruments: [
+                                {
+                                    method: "upi"
+                                }
+                            ]
+                        }
+                    },
+                    sequence: ["block.upi"],
+                    preferences: {
+                        show_default_blocks: false
+                    }
+                }
+            },
+            handler: async function (response) {
+                console.log("PAYMENT SUCCESS:", response)
+                try {
+                    const res = await fetch("/orders/payment-success/", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": getCSRFToken()
+                        },
+                        body: JSON.stringify({
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_signature: response.razorpay_signature
+                        })
+                    })
+                    const resData = await res.json();
+                    if (resData.success) {
+                        localStorage.removeItem("cart")
+                        window.dispatchEvent(new Event("cartUpdated"))
+                        window.location.href = "/orders/success/"
+                    } else {
+                        showToastMsg(resData.error || "Payment failed verification", "error")
+                    }
+                } catch (error) {
+                    console.error(error)
+                    showToastMsg("Payment succeeded but order update failed", "error")
+                }
+            },
+            modal: {
+                ondismiss: function () {
+                    console.log("Payment popup closed")
+                    showToastMsg("Payment cancelled", "warning")
+                }
+            }
+        }
+
+        const rzp = new Razorpay(options)
+        rzp.open()
+    }
+</script>
+{% endblock %}

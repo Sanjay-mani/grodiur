@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .settings-container { max-width: 800px; margin: 40px auto; padding: 0 20px; transition: all 0.3s ease; }
+    .settings-title { font-size: 28px; font-weight: 800; color: var(--text-main); margin-bottom: 32px; font-family: 'Poppins', sans-serif; }
+    
+    .settings-section { background: var(--card-bg); border-radius: 20px; padding: 32px; border: 1px solid var(--border-color); box-shadow: var(--card-shadow); margin-bottom: 24px; transition: all 0.3s ease; }
+    .section-header { font-size: 16px; font-weight: 800; color: var(--text-main); margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+    
+    .info-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border-color); }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { font-size: 14px; font-weight: 600; color: var(--text-sec); }
+    .info-value { font-size: 15px; font-weight: 700; color: var(--text-main); }
+
+    .danger-zone { border-color: #fee2e2; background: rgba(254, 226, 226, 0.05); }
+    .logout-btn { background: #e11d48; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; transition: background 0.2s; }
+    .logout-btn:hover { background: #be123c; }
+
+    .edit-profile-link { color: var(--green); font-weight: 700; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+</style>
+
+<div class="settings-container">
+    <h2 class="settings-title">Account Settings</h2>
+
+    <!-- Appearance Settings -->
+    <div class="settings-section">
+        <div class="section-header">
+            <span>✨</span> Appearance
+        </div>
+        <div class="info-row">
+            <div>
+                <div class="info-value" id="theme-status-text">Light Mode</div>
+                <div class="info-label">Switch between light and dark themes</div>
+            </div>
+            <button id="theme-toggle-btn" onclick="toggleTheme()" style="background: var(--bg-color); border: 1.5px solid var(--border-color); color: var(--text-main); padding: 10px 20px; border-radius: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.3s ease;">
+                <span id="theme-icon">☀️</span>
+                <span id="theme-toggle-text">Switch to Dark</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Profile Settings -->
+    <div class="settings-section">
+        <div class="section-header">
+            <span>👤</span> Profile Settings
+        </div>
+        <div class="info-row">
+            <div>
+                <div class="info-label">Full Name</div>
+                <div class="info-value" id="set-full-name">---</div>
+            </div>
+            <a href="{% url 'profile' %}" class="edit-profile-link">Edit Profile →</a>
+        </div>
+    </div>
+
+    <!-- Account Info -->
+    <div class="settings-section">
+        <div class="section-header">
+            <span>🛡️</span> Account Info
+        </div>
+        <div class="info-row">
+            <div>
+                <div class="info-label">Email Address</div>
+                <div class="info-value" id="set-email">---</div>
+            </div>
+        </div>
+        <div class="info-row">
+            <div>
+                <div class="info-label">Phone Number</div>
+                <div class="info-value" id="set-phone">---</div>
+            </div>
+        </div>
+        <div class="info-row">
+            <div>
+                <div class="info-label">Account Status</div>
+                <div class="info-value" style="color: #0c831f;">Active</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="settings-section danger-zone">
+        <div class="section-header" style="color: #e11d48;">
+            <span>⚠️</span> Danger Zone
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <div class="info-value" style="color: #0f172a;">Logout from this device</div>
+                <div class="info-label" style="margin-top: 4px;">Sign out of your account on this browser</div>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()">Logout</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.addEventListener('DOMContentLoaded', async () => {
+        // Sync Theme UI
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        updateThemeUI(currentTheme);
+
+        try {
+            const res = await fetch("{% url 'api_user_me' %}");
+            const data = await res.json();
+            
+            const fullName = data.last_name ? `${data.first_name} ${data.last_name}` : data.first_name;
+            
+            // Identity logic fix
+            const isPhoneLogin = data.email && data.email.includes("@phone.grodiur.com");
+            const displayEmail = isPhoneLogin ? "Not provided" : data.email || "Not provided";
+            const displayPhone = isPhoneLogin ? data.phone || data.email.split("@")[0] : data.phone || "Not provided";
+
+            document.getElementById('set-full-name').textContent = fullName;
+            document.getElementById('set-email').textContent = displayEmail;
+            document.getElementById('set-phone').textContent = displayPhone;
+        } catch(e) { console.error("Failed to load settings data", e); }
+    });
+
+    function toggleTheme() {
+        const isDark = document.body.classList.toggle('dark-theme');
+        document.documentElement.classList.toggle('dark-theme');
+        
+        const theme = isDark ? 'dark' : 'light';
+        localStorage.setItem('theme', theme);
+        updateThemeUI(theme);
+        
+        if (window.showToastMsg) {
+            showToastMsg(`Switched to ${theme} mode`, 'ok');
+        }
+    }
+
+    function updateThemeUI(theme) {
+        const icon = document.getElementById('theme-icon');
+        const toggleText = document.getElementById('theme-toggle-text');
+        const statusText = document.getElementById('theme-status-text');
+        
+        if (theme === 'dark') {
+            if (icon) icon.textContent = '🌙';
+            if (toggleText) toggleText.textContent = 'Switch to Light';
+            if (statusText) statusText.textContent = 'Dark Mode';
+        } else {
+            if (icon) icon.textContent = '☀️';
+            if (toggleText) toggleText.textContent = 'Switch to Dark';
+            if (statusText) statusText.textContent = 'Light Mode';
+        }
+    }
+
+    function handleLogout() {
+        showConfirmModal({
+            title: "Logout?",
+            text: "Are you sure you want to logout from Grodiur?",
+            confirmText: "Logout",
+            confirmClass: "danger",
+            onConfirm: () => {
+                localStorage.clear();
+                window.location.href = "{% url 'logout' %}";
+            }
+        });
+    }
+</script>
+
+{% endblock %}

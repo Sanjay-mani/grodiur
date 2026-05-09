@@ -1,0 +1,542 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    .quantity-btn {
+        width: 36px; height: 36px; border-radius: 10px;
+        border: 1.5px solid var(--border-color); background: var(--card-bg);
+        color: var(--text-main); font-weight: 700; transition: all 0.2s;
+    }
+    .quantity-btn:hover { background: var(--input-bg); border-color: var(--green); }
+    
+    .review-card {
+        background: var(--input-bg); border-radius: 16px; padding: 20px;
+        margin-bottom: 16px; border: 1px solid var(--border-color);
+    }
+    .star-rating { color: #fbbf24; font-size: 1.1rem; }
+    .star-rating.empty { color: var(--border-color); }
+
+    .rating-input { display: flex; gap: 8px; flex-direction: row-reverse; justify-content: flex-end; }
+    .rating-input input { display: none; }
+    .rating-input label { font-size: 2rem; color: var(--border-color); cursor: pointer; transition: color 0.2s; }
+    .rating-input input:checked ~ label,
+    .rating-input label:hover,
+    .rating-input label:hover ~ label { color: #fbbf24; }
+
+    .related-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); background: var(--card-bg); border: 1px solid var(--border-color); }
+    .related-card:hover { transform: translateY(-5px); box-shadow: var(--card-shadow) !important; }
+
+    /* Wishlist Floating Button Styles */
+    .wishlist-floating {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(4px);
+        border: none;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 10;
+        color: #ec4899;
+        padding: 0;
+    }
+    
+    .dark-theme .wishlist-floating {
+        background: rgba(17, 24, 39, 0.95);
+        color: #ec4899;
+    }
+
+    .wishlist-floating:hover {
+        transform: scale(1.15);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .wishlist-floating.active {
+        background: linear-gradient(135deg, #ec4899, #be185d) !important;
+        color: white !important;
+    }
+
+    .wishlist-floating svg {
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+</style>
+
+<div class="row g-5">
+    <!-- LEFT: Large Product Image -->
+    <div class="col-md-6 col-lg-5">
+        <div class="position-sticky" style="top: 100px;">
+            <div class="rounded-4 overflow-hidden shadow-sm bg-white position-relative" style="border: 1px solid var(--border-color);">
+                <!-- Floating Wishlist Button -->
+                <button class="wishlist-floating" 
+                    onclick="toggleWishlist('{{ product.id }}')" 
+                    title="Add to Wishlist">
+                    <svg id="wishlist-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                </button>
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" class="img-fluid w-100" 
+                        style="height: 500px; object-fit: cover;" alt="{{ product.name }}">
+                {% else %}
+                    <div class="d-flex align-items-center justify-content-center bg-light" 
+                        style="height: 500px; font-size: 8rem;">
+                        {% if product.category.slug == 'vegetables' %}🥦
+                        {% elif product.category.slug == 'fruits' %}🍎
+                        {% elif product.category.slug == 'dairy-eggs' %}🥛
+                        {% else %}🛒{% endif %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Optional Thumbnails (Placeholder for now) -->
+            <div class="d-flex gap-3 mt-4">
+                <div class="rounded-3 border overflow-hidden shadow-sm" style="width: 80px; height: 80px; cursor: pointer; border-color: #2d6a4f !important; border-width: 2px !important;">
+                    <img src="{{ product.image.url|default:'#' }}" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Product Details -->
+    <div class="col-md-6 col-lg-7">
+        <div class="ps-md-4">
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb" style="font-size: 0.85rem; font-weight: 500;">
+                    <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-muted">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'product_list' %}?category={{ product.category.slug }}" class="text-decoration-none text-muted">{{ product.category.name }}</a></li>
+                    <li class="breadcrumb-item active text-dark">{{ product.name }}</li>
+                </ol>
+            </nav>
+
+            <h1 class="display-6 fw-800 mb-2" style="font-weight: 800; color: var(--text-main);">{{ product.name }}</h1>
+            
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <span class="badge" style="background: rgba(22, 163, 74, 0.1); color: #166534; padding: 6px 14px; border-radius: 20px; font-weight: 600;">
+                    {{ product.category.name }}
+                </span>
+                <div class="d-flex align-items-center gap-1">
+                    <span class="star-rating">★★★★★</span>
+                    <span class="text-muted small" id="review-count-header">({{ product.reviews.count }} reviews)</span>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="d-flex align-items-baseline gap-2">
+                    <span class="display-5 fw-bold" style="color: var(--green);">₹{{ product.price }}</span>
+                    {% if product.mrp_price %}
+                        <span class="text-muted text-decoration-line-through fs-4">₹{{ product.mrp_price }}</span>
+                    {% endif %}
+                </div>
+                <p class="text-muted mt-1">Inclusive of all taxes · <strong>per {{ product.unit }}</strong></p>
+            </div>
+
+            <div class="mb-4">
+                {% if product.stock > 0 %}
+                    <div class="d-flex align-items-center gap-2 text-success fw-600">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        <span>In Stock & Ready to ship</span>
+                    </div>
+                {% else %}
+                    <div class="d-flex align-items-center gap-2 text-danger fw-600">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        <span>Currently Out of Stock</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="p-4 rounded-4 mb-4" style="background: var(--input-bg); border: 1px solid var(--border-color);">
+                <div class="d-flex align-items-center gap-4 flex-wrap" id="product-actions-container">
+                    <!-- Quantity Selector (Hidden by default if not in cart) -->
+                    <div id="quantity-selector" class="d-flex align-items-center gap-3 bg-white p-2 rounded-3 shadow-sm border" style="display: none !important;">
+                        <button class="quantity-btn" onclick="handleQtyChange(-1)">-</button>
+                        <span id="quantity-val" class="fw-bold px-2" style="min-width: 30px; text-align: center; color: #000;">1</span>
+                        <button class="quantity-btn" onclick="handleQtyChange(1)">+</button>
+                    </div>
+                    
+                    <button id="add-to-cart-btn" onclick="handleAddToCart('{{ product.id }}')" 
+                        class="btn btn-lg btn-grodiur flex-grow-1" 
+                        style="padding: 14px 28px; border-radius: 12px; {% if product.stock <= 0 %}opacity:0.6; pointer-events:none;{% endif %}">
+                        🛒 Add to Cart
+                    </button>
+                </div>
+            </div>
+
+            <div class="mb-5">
+                <h5 class="fw-bold mb-3" style="color: var(--text-main);">Product Description</h5>
+                <p class="text-muted line-height-lg">
+                    {{ product.description|default:"Fresh farm vegetables delivered directly from local markets. Quality checked and hygienically packed. Experience the true taste of nature with our carefully selected produce." }}
+                </p>
+                <div class="row g-3 mt-2">
+                    <div class="col-sm-6">
+                        <div class="d-flex align-items-center gap-2 small text-muted">
+                            <div style="width: 8px; height: 8px; background: #52b788; border-radius: 50%;"></div>
+                            Hygienically Packed
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="d-flex align-items-center gap-2 small text-muted">
+                            <div style="width: 8px; height: 8px; background: #52b788; border-radius: 50%;"></div>
+                            Quality Assured
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-5">
+
+            <!-- REVIEWS SECTION -->
+            <div id="reviews-section">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h4 class="fw-bold mb-0" style="color: var(--text-main);">Customer Reviews</h4>
+                    <button class="btn btn-sm btn-grodiur-outline px-3" onclick="scrollToReviewForm()">Write a Review</button>
+                </div>
+
+                <div id="reviews-list">
+                    <!-- Loaded via AJAX -->
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-success" role="status"></div>
+                    </div>
+                </div>
+
+                <!-- Review Form -->
+                {% if user.is_authenticated %}
+                <div class="mt-5 p-4 rounded-4" style="background: var(--card-bg); border: 2px dashed var(--border-color);" id="review-form-container">
+                    <h5 class="fw-bold mb-3" style="color: var(--text-main);">Add Your Review</h5>
+                    <form id="review-form">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Rating</label>
+                            <div class="rating-input">
+                                <input type="radio" name="rating" id="star5" value="5"><label for="star5">★</label>
+                                <input type="radio" name="rating" id="star4" value="4"><label for="star4">★</label>
+                                <input type="radio" name="rating" id="star3" value="3"><label for="star3">★</label>
+                                <input type="radio" name="rating" id="star2" value="2"><label for="star2">★</label>
+                                <input type="radio" name="rating" id="star1" value="1"><label for="star1">★</label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Your Comment</label>
+                            <textarea id="review-comment" class="form-control border-0 bg-light" rows="3" placeholder="How was the quality and delivery?" style="border-radius: 12px;"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-grodiur px-4 py-2" id="submit-review-btn">Submit Review</button>
+                    </form>
+                </div>
+                {% else %}
+                <div class="mt-5 p-4 rounded-4 text-center" style="background: rgba(22, 163, 74, 0.05); border: 1px solid var(--border-color);">
+                    <p class="mb-0 text-muted">Please <a href="#" onclick="openLoginModal(); return false;" class="text-success fw-bold">Login</a> to write a review.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Related Products Section -->
+{% if related_products %}
+<div class="mt-5 pt-5 border-top" style="border-color: var(--border-color) !important;">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h3 class="fw-bold" style="color: var(--text-main);">Related Products</h3>
+        <a href="{% url 'product_list' %}?category={{ product.category.slug }}" class="text-success fw-bold text-decoration-none">View All →</a>
+    </div>
+    <div class="row row-cols-2 row-cols-md-4 g-4">
+        {% for p in related_products %}
+        <div class="col">
+            <div class="card grodiur-card related-card h-100 position-relative related-product-card" 
+                data-product-id="{{ p.id }}"
+                data-product-name="{{ p.name|escapejs }}"
+                data-product-price="{{ p.price }}"
+                data-product-image="{% if p.image %}{{ p.image.url }}{% endif %}"
+                onclick="window.location.href='/product/{{ p.id }}/'" style="cursor: pointer;">
+                <!-- Floating Wishlist Button -->
+                <button class="wishlist-floating" 
+                    style="width:36px; height:36px; top:10px; right:10px;"
+                    onclick="event.stopPropagation(); toggleWishlist('{{ p.id }}', this)" 
+                    title="Add to Wishlist">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="heart-icon">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                </button>
+                <div class="p-3">
+                    {% if p.image %}
+                        <img src="{{ p.image.url }}" class="rounded-3 w-100" style="height: 140px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-3 bg-light d-flex align-items-center justify-content-center" style="height: 140px; font-size: 3rem;">🛒</div>
+                    {% endif %}
+                </div>
+                <div class="card-body pt-0 pb-3 px-3">
+                    <h6 class="fw-bold mb-1" style="font-size: 0.9rem;">{{ p.name }}</h6>
+                    <div class="mt-2">
+                        <span class="fw-bold" style="color: #2d6a4f;">₹{{ p.price }}<span style="font-size: 11px; color: #64748b; font-weight: 500;">/ {{ p.unit }}</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<script>
+    const productData = {
+        id: '{{ product.id }}',
+        name: '{{ product.name|escapejs }}',
+        price: '{{ product.price }}',
+        image: '{% if product.image %}{{ product.image.url }}{% endif %}',
+        category: '{{ product.category.name|escapejs }}'
+    };
+
+    function syncProductState() {
+        const cart = JSON.parse(localStorage.getItem("cart")) || [];
+        const favourites = JSON.parse(localStorage.getItem("favourites")) || [];
+        
+        // Sync Main Product
+        const existingItem = cart.find(item => item.id === productData.id);
+        const qtySelector = document.getElementById('quantity-selector');
+        const addBtn = document.getElementById('add-to-cart-btn');
+        const qtyVal = document.getElementById('quantity-val');
+
+        if (existingItem) {
+            qtySelector.style.setProperty('display', 'flex', 'important');
+            addBtn.style.display = 'none';
+            qtyVal.textContent = existingItem.quantity;
+        } else {
+            qtySelector.style.setProperty('display', 'none', 'important');
+            addBtn.style.display = 'block';
+        }
+
+        const isMainFav = favourites.some(item => item.id === productData.id);
+        const mainBtn = document.querySelector('.wishlist-floating:not(.related-product-card .wishlist-floating)');
+        if (mainBtn) {
+            mainBtn.classList.toggle('active', isMainFav);
+            mainBtn.querySelector('svg').setAttribute('fill', isMainFav ? 'currentColor' : 'none');
+        }
+
+        // Sync Related Products
+        document.querySelectorAll('.related-product-card').forEach(card => {
+            const pid = card.dataset.productId;
+            const isFav = favourites.some(item => item.id === pid);
+            const btn = card.querySelector('.wishlist-floating');
+            if (btn) {
+                btn.classList.toggle('active', isFav);
+                btn.querySelector('svg').setAttribute('fill', isFav ? 'currentColor' : 'none');
+            }
+        });
+    }
+
+    async function handleAddToCart(productId) {
+        let cart = JSON.parse(localStorage.getItem("cart")) || [];
+        const existingItem = cart.find(item => item.id === productId);
+        
+        if (!existingItem) {
+            cart.push({ ...productData, quantity: 1 });
+        }
+        
+        localStorage.setItem("cart", JSON.stringify(cart));
+        window.dispatchEvent(new Event("cartUpdated"));
+        syncProductState();
+        
+        if (typeof showToast !== 'undefined') showToast(`${productData.name} added to cart`, 'success');
+
+        // Background sync with server
+        try {
+            await fetch(`/cart/add/${productId}/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ quantity: 1 })
+            });
+        } catch (e) { console.error("Sync Error:", e); }
+    }
+
+    async function handleQtyChange(delta) {
+        let cart = JSON.parse(localStorage.getItem("cart")) || [];
+        let isRemoved = false;
+        let updatedCart = cart.map(item => {
+            if (item.id === productData.id) {
+                const newQty = item.quantity + delta;
+                if (newQty <= 0) isRemoved = true;
+                return newQty > 0 ? { ...item, quantity: newQty } : null;
+            }
+            return item;
+        }).filter(Boolean);
+
+        localStorage.setItem("cart", JSON.stringify(updatedCart));
+        window.dispatchEvent(new Event("cartUpdated"));
+        syncProductState();
+
+        if (typeof showToast !== 'undefined') {
+            if (isRemoved) {
+                showToast(`${productData.name} removed from cart`, 'error');
+            } else {
+                showToast(`${productData.name} quantity updated`, 'success');
+            }
+        }
+
+        // Background sync with server
+        const action = delta > 0 ? 'increase' : 'decrease';
+        try {
+            // We need the item_id for update_cart_ajax, but here we only have product_id.
+            // For simplicity in this "Blinkit" feel, we can call add_to_cart with delta
+            // or a dedicated sync endpoint. Since add_to_cart in cart/views.py handles quantity:
+            await fetch(`/cart/add/${productData.id}/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ quantity: delta })
+            });
+        } catch (e) { console.error("Sync Error:", e); }
+    }
+
+    function toggleWishlist(productId, btn) {
+        let pData = productData;
+        if (productId !== productData.id && btn) {
+            const card = btn.closest('.related-product-card');
+            pData = {
+                id: productId,
+                name: card.dataset.productName,
+                price: card.dataset.productPrice,
+                image: card.dataset.productImage
+            };
+        }
+
+        let favourites = JSON.parse(localStorage.getItem("favourites")) || [];
+        const exists = favourites.find(item => item.id === productId);
+        
+        if (exists) {
+            favourites = favourites.filter(item => item.id !== productId);
+        } else {
+            favourites.push(pData);
+        }
+        
+        localStorage.setItem("favourites", JSON.stringify(favourites));
+        window.dispatchEvent(new Event("favouritesUpdated"));
+        syncProductState();
+
+        // Background sync
+        fetch(`/accounts/wishlist/add/${productId}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+        });
+    }
+
+    window.addEventListener('load', () => {
+        syncProductState();
+        loadReviews();
+    });
+    window.addEventListener('cartUpdated', syncProductState);
+    window.addEventListener('favouritesUpdated', syncProductState);
+
+    // --- REVIEWS LOGIC ---
+    const FAKE_REVIEWS = [
+        { name: "Rahul", rating: 5, comment: "Fresh quality and fast delivery.", createdAt: "May 01, 2026" },
+        { name: "Priya", rating: 4, comment: "Packaging was clean and vegetables were fresh.", createdAt: "Apr 28, 2026" },
+        { name: "Amit", rating: 5, comment: "Better than local market quality.", createdAt: "Apr 25, 2026" }
+    ];
+
+    async function loadReviews() {
+        const list = document.getElementById('reviews-list');
+        try {
+            const res = await fetch(`/api/products/{{ product.id }}/reviews/`);
+            const data = await res.json();
+            
+            if (data.length === 0) {
+                renderReviews(FAKE_REVIEWS);
+            } else {
+                renderReviews(data);
+            }
+        } catch (e) {
+            console.error("Reviews failed to load:", e);
+            renderReviews(FAKE_REVIEWS);
+        }
+    }
+
+    function renderReviews(reviews) {
+        const list = document.getElementById('reviews-list');
+        list.innerHTML = reviews.map(r => `
+            <div class="review-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h6 class="fw-bold mb-0">${r.userName || r.name}</h6>
+                        <span class="text-muted small">${r.createdAt}</span>
+                    </div>
+                    <div class="star-rating">
+                        ${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}
+                    </div>
+                </div>
+                <p class="mb-0 text-muted small" style="line-height: 1.5;">${r.comment}</p>
+            </div>
+        `).join('');
+    }
+
+    function scrollToReviewForm() {
+        document.getElementById('review-form-container')?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    document.getElementById('review-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const rating = document.querySelector('input[name="rating"]:checked')?.value;
+        const comment = document.getElementById('review-comment').value.trim();
+        
+        if (!rating) { showToastMsg("Please select a rating!", "error"); return; }
+        if (comment.length < 5) { showToastMsg("Comment must be at least 5 characters!", "error"); return; }
+        
+        const btn = document.getElementById('submit-review-btn');
+        btn.disabled = true;
+        btn.textContent = "Submitting...";
+        
+        try {
+            const res = await fetch(`/api/products/{{ product.id }}/reviews/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ rating, comment })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                // Instant update
+                const list = document.getElementById('reviews-list');
+                const newReviewHtml = `
+                    <div class="review-card" style="animation: fadeInUp 0.4s ease;">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="fw-bold mb-0">${data.review.userName}</h6>
+                                <span class="text-muted small">Just now</span>
+                            </div>
+                            <div class="star-rating">
+                                ${'★'.repeat(data.review.rating)}${'☆'.repeat(5-data.review.rating)}
+                            </div>
+                        </div>
+                        <p class="mb-0 text-muted small" style="line-height: 1.5;">${data.review.comment}</p>
+                    </div>
+                `;
+                
+                // If it was fake reviews, clear them first
+                const firstReview = list.querySelector('.review-card h6');
+                if (firstReview && FAKE_REVIEWS.some(f => f.name === firstReview.textContent)) {
+                    list.innerHTML = newReviewHtml;
+                } else {
+                    list.insertAdjacentHTML('afterbegin', newReviewHtml);
+                }
+                
+                document.getElementById('review-form').reset();
+                showToastMsg('Thank you for your review!', 'ok');
+            } else {
+                showToastMsg(data.error || "Failed to submit review", "error");
+            }
+        } catch (e) { console.error(e); }
+        
+        btn.disabled = false;
+        btn.textContent = "Submit Review";
+    });
+
+    window.addEventListener('load', loadReviews);
+</script>
+
+{% endblock %}

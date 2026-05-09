@@ -1,0 +1,30 @@
+from django.contrib import admin
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+from django.shortcuts import render
+
+
+from products import views as product_views
+
+
+def home_view(request):
+    return render(request, 'home.html')
+
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('accounts/', include('accounts.urls')),
+    path('products/', include('products.urls')),
+    path('product/<int:product_id>/', product_views.product_detail_by_id, name='product_detail_by_id'),
+    path('cart/', include('cart.urls')),
+    path('orders/', include('orders.urls')),
+    path('reviews/', include('reviews.urls')),
+    path('chatbot/', include('chatbot.urls')),
+    path('api/products/<int:product_id>/reviews/', product_views.product_reviews_api, name='product_reviews_api_direct'),
+    path('api/', include('otp_auth.urls')),
+    
+    path('accounts/', include('allauth.urls')),
+
+    path('', home_view, name='home'),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Hero Section -->
+<div class="rounded-4 mb-5 p-5 text-white position-relative overflow-hidden"
+    style="background:linear-gradient(135deg, #1b4332 0%, #2d6a4f 50%, #52b788 100%); min-height:420px;">
+
+    <!-- Floating Emojis -->
+    <div style="position:absolute;top:20px;right:80px;font-size:5rem;opacity:0.15;" class="float-anim">🥦</div>
+    <div style="position:absolute;bottom:20px;right:200px;font-size:4rem;opacity:0.15;animation:float 4s ease-in-out infinite;">🍎</div>
+    <div style="position:absolute;top:60px;right:300px;font-size:3rem;opacity:0.1;animation:float 5s ease-in-out infinite;">🥕</div>
+    <div style="position:absolute;bottom:40px;right:80px;font-size:3.5rem;opacity:0.12;animation:float 3.5s ease-in-out infinite;">🧅</div>
+
+    <div class="row align-items-center" style="min-height:350px;">
+        <div class="col-md-7 fade-in-up">
+            <span class="badge mb-3 px-3 py-2" style="background:rgba(255,255,255,0.2);font-size:0.85rem;">
+                🤖 AI-Powered Grocery Platform
+            </span>
+            <h1 class="display-4 fw-800 mb-3" style="font-weight:800;line-height:1.2;">
+                Fresh Groceries<br>
+                <span style="color:#95d5b2;">Delivered Daily</span> 🛒
+            </h1>
+            <p class="lead mb-4" style="opacity:0.9;font-size:1.1rem;">
+                Shop smarter with AI assistance. Fresh vegetables, fruits & daily essentials delivered to your doorstep in 24 hours!
+            </p>
+            <div class="d-flex gap-3 flex-wrap">
+                <a href="{% url 'product_list' %}"
+                    class="btn btn-lg px-4 py-3 fw-bold"
+                    style="background:#f4a261;color:white;border-radius:30px;border:none;transition:all 0.3s;">
+                    🛒 Shop Now
+                </a>
+                {% if not user.is_authenticated %}
+                <a href="{% url 'register' %}"
+                    class="btn btn-lg px-4 py-3 fw-bold"
+                    style="background:rgba(255,255,255,0.15);color:white;border:2px solid rgba(255,255,255,0.4);border-radius:30px;transition:all 0.3s;">
+                    Get Started Free →
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Section -->
+<div class="row g-4 mb-5">
+    <div class="col-6 col-md-3">
+        <div class="card grodiur-card text-center p-4">
+            <div style="font-size:2.5rem;">🥦</div>
+            <h4 class="fw-bold mt-2 mb-0" style="color:#2d6a4f;">500+</h4>
+            <small class="text-muted">Fresh Products</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card grodiur-card text-center p-4">
+            <div style="font-size:2.5rem;">🚚</div>
+            <h4 class="fw-bold mt-2 mb-0" style="color:#2d6a4f;">24hrs</h4>
+            <small class="text-muted">Fast Delivery</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card grodiur-card text-center p-4">
+            <div style="font-size:2.5rem;">🤖</div>
+            <h4 class="fw-bold mt-2 mb-0" style="color:#2d6a4f;">24x7</h4>
+            <small class="text-muted">AI Support</small>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card grodiur-card text-center p-4">
+            <div style="font-size:2.5rem;">⭐</div>
+            <h4 class="fw-bold mt-2 mb-0" style="color:#2d6a4f;">4.9/5</h4>
+            <small class="text-muted">Customer Rating</small>
+        </div>
+    </div>
+</div>
+
+<!-- Categories Section -->
+<div class="mb-5">
+    <h2 class="fw-bold text-center mb-2" style="color:#1b4332;">Shop by Category</h2>
+    <p class="text-center text-muted mb-4">Everything you need for your daily kitchen</p>
+    <div class="row g-4">
+        <div class="col-6 col-md-4 col-lg-2-4">
+            <a href="{% url 'product_list' %}?category=vegetables" style="text-decoration:none;">
+                <div class="card grodiur-card text-center p-4"
+                    style="background:linear-gradient(135deg,#d8f3dc,#b7e4c7);">
+                    <div style="font-size:3rem;">🥦</div>
+                    <h6 class="fw-bold mt-2 mb-0" style="color:#1b4332;">Vegetables</h6>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2-4">
+            <a href="{% url 'product_list' %}?category=fruits" style="text-decoration:none;">
+                <div class="card grodiur-card text-center p-4"
+                    style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);">
+                    <div style="font-size:3rem;">🍎</div>
+                    <h6 class="fw-bold mt-2 mb-0" style="color:#e65100;">Fruits</h6>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2-4">
+            <a href="{% url 'product_list' %}?category=dairy-eggs" style="text-decoration:none;">
+                <div class="card grodiur-card text-center p-4"
+                    style="background:linear-gradient(135deg,#fff8e1,#ffecb3);">
+                    <div style="font-size:3rem;">🥛</div>
+                    <h6 class="fw-bold mt-2 mb-0" style="color:#f57f17;">Dairy & Eggs</h6>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2-4">
+            <a href="{% url 'product_list' %}?category=rice-grains" style="text-decoration:none;">
+                <div class="card grodiur-card text-center p-4"
+                    style="background:linear-gradient(135deg,#fce4ec,#f8bbd9);">
+                    <div style="font-size:3rem;">🌾</div>
+                    <h6 class="fw-bold mt-2 mb-0" style="color:#880e4f;">Rice & Grains</h6>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2-4">
+            <a href="{% url 'product_list' %}?category=masala-spices" style="text-decoration:none;">
+                <div class="card grodiur-card text-center p-4"
+                    style="background:linear-gradient(135deg,#fbe9e7,#ffccbc);">
+                    <div style="font-size:3rem;">🌶️</div>
+                    <h6 class="fw-bold mt-2 mb-0" style="color:#bf360c;">Masala & Spices</h6>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Why Grodiur Section -->
+<div class="rounded-4 p-5 mb-4"
+    style="background:linear-gradient(135deg,#f0f7f4,#e8f5e9);">
+    <h2 class="fw-bold text-center mb-4" style="color:#1b4332;">Why Choose Grodiur? 🌟</h2>
+    <div class="row g-4">
+        <div class="col-md-4 text-center">
+            <div style="font-size:3rem;" class="float-anim">🌿</div>
+            <h5 class="fw-bold mt-3" style="color:#2d6a4f;">100% Fresh</h5>
+            <p class="text-muted">Sourced directly from farms. Delivered fresh to your door every single day.</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <div style="font-size:3rem;animation:float 4s ease-in-out infinite;">🤖</div>
+            <h5 class="fw-bold mt-3" style="color:#2d6a4f;">AI Assistant</h5>
+            <p class="text-muted">Our smart chatbot helps you find products and track orders 24x7.</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <div style="font-size:3rem;animation:float 5s ease-in-out infinite;">💰</div>
+            <h5 class="fw-bold mt-3" style="color:#2d6a4f;">Best Prices</h5>
+            <p class="text-muted">Competitive prices with FREE delivery on every single order!</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
