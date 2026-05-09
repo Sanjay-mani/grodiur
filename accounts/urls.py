@@ -18,4 +18,5 @@ urlpatterns = [
     # API
     path('api/user/me', views.api_user_me, name='api_user_me'),
     path('api/user/update', views.api_user_update, name='api_user_update'),
+    path('update-name/', views.api_user_update, name='update_name'),
 ]
