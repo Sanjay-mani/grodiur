@@ -278,7 +278,9 @@ def api_order_detail_json(request, order_id):
         'payment_status': payment_status,
         'created_at': order.created_at.isoformat(),
         'items': items
-    })@csrf_exempt
+    })
+
+@csrf_exempt
 @custom_login_required
 def create_razorpay_order(request):
     if request.method == "POST":
