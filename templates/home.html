@@ -29,14 +29,8 @@
                     style="background:#f4a261;color:white;border-radius:30px;border:none;transition:all 0.3s;">
                     🛒 Shop Now
                 </a>
-                {% if not user.is_authenticated %}
-                <a href="{% url 'register' %}"
-                    class="btn btn-lg px-4 py-3 fw-bold"
-                    style="background:rgba(255,255,255,0.15);color:white;border:2px solid rgba(255,255,255,0.4);border-radius:30px;transition:all 0.3s;">
-                    Get Started Free →
-                </a>
-                {% endif %}
             </div>
+
         </div>
     </div>
 </div>
