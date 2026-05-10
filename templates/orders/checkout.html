@@ -100,9 +100,6 @@
                             <div class="payment-icon">📱</div>
                             <div style="flex: 1;">
                                 <div style="font-weight: 700; color: var(--text-main); font-size: 15px;">UPI (GPay, PhonePe, Paytm)</div>
-                                <div style="font-size: 11px; color: #ef4444; font-weight: 600; margin-top: 4px;">
-                                    Test mode QR may not work in real UPI apps. Use GPay/PhonePe buttons instead.
-                                </div>
                             </div>
                             <input type="radio" name="pay_radio" class="payment-radio" checked onclick="event.stopPropagation()">
                         </div>
@@ -342,7 +339,7 @@
             currency: "INR",
             name: "Grodiur",
             description: "Groceries Payment",
-            image: "/static/images/logo.png",
+            image: "data:image/svg+xml;charset=utf-8,%3Csvg width='256' height='256' viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='256' height='256' rx='64' fill='%230c831f'/%3E%3Cpath d='M72 104 L60 184 A16 16 0 0 0 76 204 L180 204 A16 16 0 0 0 196 184 L184 104 Z M48 104 L208 104' stroke='white' stroke-width='24' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Cpath d='M168 104 A40 40 0 0 0 88 104' stroke='white' stroke-width='24' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E",
             order_id: data.order_id,
             prefill: {
                 name: "{{ request.user.get_full_name }}",
