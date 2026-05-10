@@ -22,8 +22,9 @@ def product_list(request):
     category_slug = request.GET.get('category')
     selected_category = None
     if category_slug:
-        selected_category = get_object_or_404(Category, slug=category_slug)
-        products = products.filter(category=selected_category)
+        selected_category = Category.objects.filter(slug__iexact=category_slug).first()
+        if selected_category:
+            products = products.filter(category=selected_category)
 
     context = {
         'products': products,

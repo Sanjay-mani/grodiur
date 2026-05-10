@@ -9,7 +9,9 @@ from products import views as product_views
 
 
 def home_view(request):
-    return render(request, 'home.html')
+    from products.models import Category
+    categories = Category.objects.all()
+    return render(request, 'home.html', {'categories': categories})
 
 
 urlpatterns = [

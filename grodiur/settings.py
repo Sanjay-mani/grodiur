@@ -11,6 +11,9 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-grodiur-secret
 
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
+# Render reverse proxy HTTPS detection
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 ALLOWED_HOSTS = [
     '*',
     'grodiur.onrender.com',
