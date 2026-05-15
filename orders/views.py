@@ -52,6 +52,12 @@ def checkout(request):
 
         # Or Placing Order
         elif 'place_order' in request.POST:
+            # Check for unavailable products
+            unavailable_items = [item for item in cart.items.all() if not item.product.is_available]
+            if unavailable_items:
+                messages.error(request, "Some items in your cart are currently unavailable. Please remove them before checking out.")
+                return redirect('cart_detail')
+
             address_id = request.POST.get('selected_address')
             payment_method = request.POST.get('payment_method', 'COD')
 
@@ -339,6 +345,11 @@ def payment_success(request):
 
             if not cart.items.exists():
                 return JsonResponse({"success": False, "error": "Cart is empty"})
+
+            # Check for unavailable products
+            unavailable_items = [item for item in cart.items.all() if not item.product.is_available]
+            if unavailable_items:
+                return JsonResponse({"success": False, "error": "Some items in your cart are currently unavailable."})
 
             # Create the order
             order = Order.objects.create(

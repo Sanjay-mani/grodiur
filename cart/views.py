@@ -17,6 +17,12 @@ def cart_detail(request):
 def add_to_cart(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     
+    if not product.is_available:
+        if request.headers.get('Content-Type') == 'application/json' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'This product is currently unavailable.'})
+        messages.error(request, "This product is currently unavailable.")
+        return redirect(request.META.get('HTTP_REFERER', 'product_list'))
+
     quantity_to_add = 1
     if request.method == 'POST':
         try:
@@ -69,6 +75,8 @@ def update_cart_ajax(request, item_id):
             item_subtotal = float(cart_item.get_subtotal())
 
             if action == 'increase':
+                if not cart_item.product.is_available:
+                    return JsonResponse({'success': False, 'error': 'This product is currently unavailable.'})
                 cart_item.quantity += 1
                 cart_item.save()
                 item_qty = cart_item.quantity

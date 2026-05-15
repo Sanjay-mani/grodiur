@@ -10,7 +10,7 @@ def get_categories(request):
 
 
 def product_list(request):
-    products = Product.objects.filter(is_available=True)
+    products = Product.objects.all()
     categories = Category.objects.all()
 
     # Search
@@ -36,9 +36,9 @@ def product_list(request):
 
 
 def product_detail(request, slug):
-    product = get_object_or_404(Product, slug=slug, is_available=True)
+    product = get_object_or_404(Product, slug=slug)
     related_products = Product.objects.filter(
-        category=product.category, is_available=True
+        category=product.category
     ).exclude(id=product.id)[:4]
 
     context = {
@@ -49,9 +49,9 @@ def product_detail(request, slug):
 
 
 def product_detail_by_id(request, product_id):
-    product = get_object_or_404(Product, id=product_id, is_available=True)
+    product = get_object_or_404(Product, id=product_id)
     related_products = Product.objects.filter(
-        category=product.category, is_available=True
+        category=product.category
     ).exclude(id=product.id)[:4]
 
     context = {
@@ -137,7 +137,7 @@ def api_product_search(request):
         q_filter |= Q(description__icontains=term)
         q_filter |= Q(category__name__icontains=term)
 
-    products = Product.objects.filter(q_filter, is_available=True).distinct()[:8]
+    products = Product.objects.filter(q_filter).distinct()[:8]
 
     results = []
     for p in products:
