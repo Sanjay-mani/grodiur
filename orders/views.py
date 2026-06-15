@@ -8,14 +8,18 @@ import razorpay
 import json
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
 
-client = razorpay.Client(
-    auth=(
-        settings.RAZORPAY_KEY_ID,
-        settings.RAZORPAY_KEY_SECRET
-    )
-)
-
+def get_razorpay_client():
+    from dotenv import load_dotenv
+    import os
+    from django.conf import settings
+    # Force reload of .env to ensure new keys are used even without server restart
+    env_path = settings.BASE_DIR / '.env'
+    load_dotenv(env_path, override=True)
+    key_id = os.environ.get('RAZORPAY_KEY_ID', settings.RAZORPAY_KEY_ID)
+    key_secret = os.environ.get('RAZORPAY_KEY_SECRET', settings.RAZORPAY_KEY_SECRET)
+    return razorpay.Client(auth=(key_id, key_secret))
 
 
 @custom_login_required
@@ -128,6 +132,7 @@ def order_detail(request, order_id):
     discount = order.coupon_discount
     delivery_fee = order.delivery_fee
     grand_total = order.total_price
+    tracking_step = order.get_tracking_step()
 
     context = {
         'order': order,
@@ -135,7 +140,7 @@ def order_detail(request, order_id):
         'discount': discount,
         'delivery_fee': delivery_fee,
         'grand_total': grand_total,
-        'tracking_step': order.get_tracking_step(),
+        'tracking_step': tracking_step,
     }
     return render(request, 'orders/order_detail.html', context)
 
@@ -292,19 +297,77 @@ def create_razorpay_order(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            amount = int(float(data.get("amount")) * 100)
-            
-            # Store address ID in session for later order creation
             address_id = data.get("address_id")
-            if address_id:
-                request.session['selected_address_id'] = address_id
-
-            razorpay_order = client.order.create({
-                "amount": amount,
-                "currency": "INR",
-                "payment_capture": 1
-            })
-
+            
+            if not address_id:
+                return JsonResponse({"success": False, "error": "Delivery address not selected"})
+                
+            from accounts.models import Address
+            selected_address = get_object_or_404(Address, id=address_id, user=request.user)
+            cart = get_object_or_404(Cart, user=request.user)
+            
+            if not cart.items.exists():
+                return JsonResponse({"success": False, "error": "Your cart is empty!"})
+                
+            # Check for unavailable products
+            unavailable_items = [item for item in cart.items.all() if not item.product.is_available]
+            if unavailable_items:
+                return JsonResponse({"success": False, "error": "Some items in your cart are currently unavailable."})
+                
+            # Pre-create the Django order to guarantee record conservation
+            order = Order.objects.create(
+                user=request.user,
+                full_name=selected_address.full_name,
+                phone=selected_address.phone,
+                address=selected_address.house_street,
+                city=selected_address.city,
+                pincode=selected_address.pincode,
+                payment_method='ONLINE',
+                payment_status='pending',
+                subtotal=cart.get_item_total(),
+                mrp_total=cart.get_total_mrp(),
+                coupon=cart.coupon,
+                coupon_discount=cart.get_coupon_discount(),
+                delivery_fee=cart.get_delivery_fee(),
+                total_price=cart.get_final_total()
+            )
+            
+            # Copy cart items to order items
+            for cart_item in cart.items.all():
+                OrderItem.objects.create(
+                    order=order,
+                    product=cart_item.product,
+                    quantity=cart_item.quantity,
+                    price=cart_item.product.price
+                )
+                
+            # Initialize Razorpay live order
+            amount = int(float(cart.get_final_total()) * 100)
+            
+            if amount < 100:
+                return JsonResponse({"success": False, "error": "Amount must be at least 1 INR (100 paise)"}, status=400)
+                
+            try:
+                client = get_razorpay_client()
+                razorpay_order = client.order.create({
+                    "amount": amount,
+                    "currency": "INR",
+                    "receipt": str(order.order_id),
+                    "payment_capture": 1
+                })
+            except razorpay.errors.BadRequestError as e:
+                print(f"Razorpay BadRequestError: {e}")
+                return JsonResponse({"success": False, "error": f"Razorpay API error: {str(e)}"}, status=500)
+            except Exception as e:
+                print(f"Razorpay Error: {e}")
+                if 'unauthorized' in str(e).lower() or 'auth' in str(e).lower():
+                    return JsonResponse({"success": False, "error": "Invalid Razorpay Keys. Please use valid LIVE keys."}, status=401)
+                return JsonResponse({"success": False, "error": str(e)}, status=500)
+            
+            # Save the Razorpay Order ID on the pre-created Django order
+            order.razorpay_order_id = razorpay_order["id"]
+            order.save()
+            
             return JsonResponse({
                 "success": True,
                 "key": settings.RAZORPAY_KEY_ID,
@@ -312,8 +375,11 @@ def create_razorpay_order(request):
                 "order_id": razorpay_order["id"]
             })
         except Exception as e:
-            return JsonResponse({"success": False, "error": str(e)})
-    return JsonResponse({"success": False, "error": "Invalid request method"})
+            print(f"Checkout Backend Error: {e}")
+            if 'unauthorized' in str(e).lower() or 'auth' in str(e).lower():
+                return JsonResponse({"success": False, "error": "Invalid Razorpay Keys. Please use valid LIVE keys."}, status=401)
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
+    return JsonResponse({"success": False, "error": "Invalid request method"}, status=405)
 
 @csrf_exempt
 @custom_login_required
@@ -323,76 +389,114 @@ def payment_success(request):
             data = json.loads(request.body)
             
             # Verify Razorpay Signature
+            razorpay_order_id = data.get('razorpay_order_id')
+            razorpay_payment_id = data.get('razorpay_payment_id')
+            razorpay_signature = data.get('razorpay_signature')
+            
+            if not razorpay_order_id or not razorpay_payment_id or not razorpay_signature:
+                return JsonResponse({"success": False, "error": "Missing signature fields"}, status=400)
+
             params_dict = {
-                'razorpay_order_id': data.get('razorpay_order_id'),
-                'razorpay_payment_id': data.get('razorpay_payment_id'),
-                'razorpay_signature': data.get('razorpay_signature')
+                'razorpay_order_id': razorpay_order_id,
+                'razorpay_payment_id': razorpay_payment_id,
+                'razorpay_signature': razorpay_signature
             }
             
             try:
+                client = get_razorpay_client()
                 client.utility.verify_payment_signature(params_dict)
             except Exception:
-                return JsonResponse({"success": False, "error": "Invalid payment signature"})
-
-            # Signature verified, now create the order
-            address_id = request.session.get('selected_address_id')
-            if not address_id:
-                return JsonResponse({"success": False, "error": "Address not found in session"})
-
-            from accounts.models import Address
-            selected_address = get_object_or_404(Address, id=address_id, user=request.user)
-            cart = get_object_or_404(Cart, user=request.user)
-
-            if not cart.items.exists():
-                return JsonResponse({"success": False, "error": "Cart is empty"})
-
-            # Check for unavailable products
-            unavailable_items = [item for item in cart.items.all() if not item.product.is_available]
-            if unavailable_items:
-                return JsonResponse({"success": False, "error": "Some items in your cart are currently unavailable."})
-
-            # Create the order
-            order = Order.objects.create(
-                user=request.user,
-                full_name=selected_address.full_name,
-                phone=selected_address.phone,
-                address=selected_address.house_street,
-                city=selected_address.city,
-                pincode=selected_address.pincode,
-                payment_method='ONLINE',
-                payment_status='paid',
-                subtotal=cart.get_item_total(),
-                mrp_total=cart.get_total_mrp(),
-                coupon=cart.coupon,
-                coupon_discount=cart.get_coupon_discount(),
-                delivery_fee=cart.get_delivery_fee(),
-                total_price=cart.get_final_total()
-            )
-
-            # Copy cart items to order items
-            for cart_item in cart.items.all():
-                OrderItem.objects.create(
-                    order=order,
-                    product=cart_item.product,
-                    quantity=cart_item.quantity,
-                    price=cart_item.product.price
-                )
-
-            # Clear the cart
-            cart.items.all().delete()
-            if cart.coupon:
-                cart.coupon = None
-                cart.save()
+                return JsonResponse({"success": False, "error": "Invalid payment signature"}, status=400)
             
-            # Clear session
-            if 'selected_address_id' in request.session:
-                del request.session['selected_address_id']
-
+            # Find the pre-created Django order
+            order = get_object_or_404(Order, razorpay_order_id=razorpay_order_id, user=request.user)
+            
+            if order.payment_status != 'paid':
+                order.payment_status = 'paid'
+                order.razorpay_payment_id = razorpay_payment_id
+                order.razorpay_signature = razorpay_signature
+                order.paid_at = timezone.now()
+                order.save()
+                
+                # Clear the cart
+                cart = get_object_or_404(Cart, user=request.user)
+                cart.items.all().delete()
+                if cart.coupon:
+                    cart.coupon = None
+                    cart.save()
+                
             return JsonResponse({"success": True, "order_id": order.order_id})
             
         except Exception as e:
-            return JsonResponse({"success": False, "error": str(e)})
-    return JsonResponse({"success": False, "error": "Invalid request method"})
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
+    return JsonResponse({"success": False, "error": "Invalid request method"}, status=405)
+
+@csrf_exempt
+def razorpay_webhook(request):
+    """Secure Razorpay webhook endpoint verifying hmac signatures for absolute data integrity."""
+    if request.method == "POST":
+        webhook_signature = request.headers.get("X-Razorpay-Signature")
+        webhook_secret = getattr(settings, 'RAZORPAY_WEBHOOK_SECRET', None)
+        
+        # Verify webhook signature using the SDK if configured in .env
+        if webhook_secret and webhook_signature:
+            try:
+                client = get_razorpay_client()
+                client.utility.verify_webhook_signature(
+                    request.body.decode('utf-8'),
+                    webhook_signature,
+                    webhook_secret
+                )
+            except Exception:
+                return HttpResponse("Invalid Webhook Signature", status=400)
+        
+        try:
+            payload = json.loads(request.body)
+            event = payload.get("event")
+            
+            if event == "payment.captured":
+                payment_entity = payload["payload"]["payment"]["entity"]
+                razorpay_order_id = payment_entity.get("order_id")
+                razorpay_payment_id = payment_entity.get("id")
+                razorpay_signature = webhook_signature or ""
+                
+                try:
+                    order = Order.objects.get(razorpay_order_id=razorpay_order_id)
+                    if order.payment_status != 'paid':
+                        order.payment_status = 'paid'
+                        order.razorpay_payment_id = razorpay_payment_id
+                        order.razorpay_signature = razorpay_signature
+                        order.paid_at = timezone.now()
+                        order.save()
+                        
+                        # Clear user's cart securely
+                        try:
+                            cart = Cart.objects.get(user=order.user)
+                            cart.items.all().delete()
+                            if cart.coupon:
+                                cart.coupon = None
+                                cart.save()
+                        except Cart.DoesNotExist:
+                            pass
+                except Order.DoesNotExist:
+                    pass
+                    
+            elif event == "payment.failed":
+                payment_entity = payload["payload"]["payment"]["entity"]
+                razorpay_order_id = payment_entity.get("order_id")
+                try:
+                    order = Order.objects.get(razorpay_order_id=razorpay_order_id)
+                    if order.payment_status != 'paid':
+                        order.payment_status = 'failed'
+                        order.save()
+                except Order.DoesNotExist:
+                    pass
+                    
+        except Exception as e:
+            return HttpResponse(str(e), status=500)
+            
+        return HttpResponse("OK", status=200)
+    return HttpResponse("Invalid Method", status=400)
 
 @custom_login_required
 def latest_order_success(request):

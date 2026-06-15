@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load currency_filters %}
 {% block content %}
 
 <style>
@@ -129,9 +130,9 @@
 
             <div class="mb-4">
                 <div class="d-flex align-items-baseline gap-2">
-                    <span class="display-5 fw-bold" style="color: var(--green);">₹{{ product.price }}</span>
+                    <span class="display-5 fw-bold" style="color: var(--green);">₹{{ product.price|format_price }}</span>
                     {% if product.mrp_price %}
-                        <span class="text-muted text-decoration-line-through fs-4">₹{{ product.mrp_price }}</span>
+                        <span class="text-muted text-decoration-line-through fs-4">₹{{ product.mrp_price|format_price }}</span>
                     {% endif %}
                 </div>
                 <p class="text-muted mt-1">Inclusive of all taxes · <strong>per {{ product.unit }}</strong></p>

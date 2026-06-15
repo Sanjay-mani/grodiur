@@ -1,3 +1,4 @@
+{% load currency_filters %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -106,8 +107,8 @@
                     <span class="prod-unit">{{ item.product.unit }}</span>
                 </td>
                 <td style="text-align: center;">{{ item.quantity }}</td>
-                <td style="text-align: right;">₹{{ item.price }}</td>
-                <td style="text-align: right;">₹{{ item.get_subtotal }}</td>
+                <td style="text-align: right;">₹{{ item.price|format_price }}</td>
+                <td style="text-align: right;">₹{{ item.get_subtotal|format_price }}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -116,10 +117,10 @@
     <div class="footer">
         <div>
             <div class="totals">
-                <p>Item Total: <strong>₹{{ order.subtotal }}</strong></p>
-                <p>Delivery Fee: <strong style="color:#16a34a;">{% if order.delivery_fee == 0 %}FREE{% else %}₹{{ order.delivery_fee }}{% endif %}</strong></p>
+                <p>Item Total: <strong>₹{{ order.subtotal|format_price }}</strong></p>
+                <p>Delivery Fee: <strong style="color:#16a34a;">{% if order.delivery_fee == 0 %}FREE{% else %}₹{{ order.delivery_fee|format_price }}{% endif %}</strong></p>
                 {% if order.coupon_discount > 0 %}
-                <p>Coupon Discount: <strong style="color:#a855f7;">-₹{{ order.coupon_discount }}</strong></p>
+                <p>Coupon Discount: <strong style="color:#a855f7;">-₹{{ order.coupon_discount|format_price }}</strong></p>
                 {% endif %}
                 <p style="margin-top: 20px; font-size: 18px; color: #0f172a; border-top: 2px solid #f1f5f9; padding-top: 12px;">
                     {% if order.payment_method == 'COD' %}
@@ -127,7 +128,7 @@
                     {% else %}
                         {% if order.payment_status == 'paid' %}Total Amount Paid:{% else %}Total Amount to Pay:{% endif %}
                     {% endif %} 
-                    <strong>₹{{ order.total_price }}</strong>
+                    <strong>₹{{ order.total_price|format_price }}</strong>
                 </p>
             </div>
             <div style="margin-top: 32px;">

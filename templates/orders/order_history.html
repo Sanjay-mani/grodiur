@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load currency_filters %}
 {% block content %}
 
 <style>
@@ -50,7 +51,7 @@
                             {% endif %}
                         </span>
                     </div>
-                    <span class="order-total">₹{{ order.total_price }}</span>
+                    <span class="order-total">₹{{ order.total_price|format_price }}</span>
                 </div>
             </div>
 

@@ -17,5 +17,6 @@ urlpatterns = [
     
     path('api/create-razorpay-order/', views.create_razorpay_order, name='create_razorpay_order'),
     path('payment-success/', views.payment_success, name='payment_success'),
+    path('razorpay-webhook/', views.razorpay_webhook, name='razorpay_webhook'),
     path('success/', views.latest_order_success, name='order_success_latest'),
 ]

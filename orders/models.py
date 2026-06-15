@@ -32,6 +32,12 @@ class Order(models.Model):
 
     payment_method = models.CharField(max_length=50, default='COD')
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    
+    # Razorpay fields for secure Live tracking
+    razorpay_order_id = models.CharField(max_length=100, blank=True, null=True, unique=True)
+    razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_signature = models.CharField(max_length=200, blank=True, null=True)
+    paid_at = models.DateTimeField(blank=True, null=True)
 
     # Pricing
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)

@@ -887,6 +887,16 @@ async function openInvoice(orderId) {
     }
 }
 
+function formatCurrency(val) {
+    const num = parseFloat(val);
+    if (isNaN(num)) return '0';
+    if (num % 1 === 0) {
+        return num.toFixed(0);
+    } else {
+        return num.toFixed(2);
+    }
+}
+
 function renderInvoiceTemplate(data) {
     const date = new Date(data.created_at).toLocaleString('en-IN', {
         day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true
@@ -899,8 +909,8 @@ function renderInvoiceTemplate(data) {
                 <span style="font-size:12px; color:#94a3b8; font-weight:500; display:block; margin-top:4px;">${item.unit}</span>
             </td>
             <td style="padding:24px 40px; border-bottom:1px solid #f1f5f9; font-size:14px; font-weight:600; color:#1e293b; text-align:center;">${item.quantity}</td>
-            <td style="padding:24px 40px; border-bottom:1px solid #f1f5f9; font-size:14px; font-weight:600; color:#1e293b; text-align:right;">₹${item.price}</td>
-            <td style="padding:24px 40px; border-bottom:1px solid #f1f5f9; font-size:14px; font-weight:600; color:#1e293b; text-align:right;">₹${item.subtotal}</td>
+            <td style="padding:24px 40px; border-bottom:1px solid #f1f5f9; font-size:14px; font-weight:600; color:#1e293b; text-align:right;">₹${formatCurrency(item.price)}</td>
+            <td style="padding:24px 40px; border-bottom:1px solid #f1f5f9; font-size:14px; font-weight:600; color:#1e293b; text-align:right;">₹${formatCurrency(item.subtotal)}</td>
         </tr>
     `).join('') || '<tr><td colspan="4" style="text-align:center; padding:40px;">No items found</td></tr>';
 
@@ -950,11 +960,11 @@ function renderInvoiceTemplate(data) {
             <div style="padding:40px; display:flex; justify-content:space-between; align-items:flex-end;">
                 <div>
                     <div style="margin-bottom:20px;">
-                        <p style="margin:5px 0; font-size:14px; font-weight:600; color:#64748b;">Item Total: <strong style="color:#0f172a;">₹${data.item_total}</strong></p>
-                        <p style="margin:5px 0; font-size:14px; font-weight:600; color:#64748b;">Delivery Fee: <strong style="color:#16a34a;">${data.delivery_fee === 0 ? 'FREE' : '₹' + data.delivery_fee}</strong></p>
-                        ${data.discount > 0 ? `<p style="margin:5px 0; font-size:14px; font-weight:600; color:#64748b;">Coupon Discount: <strong style="color:#a855f7;">-₹${data.discount}</strong></p>` : ''}
+                        <p style="margin:5px 0; font-size:14px; font-weight:600; color:#64748b;">Item Total: <strong style="color:#0f172a;">₹${formatCurrency(data.item_total)}</strong></p>
+                        <p style="margin:5px 0; font-size:14px; font-weight:600; color:#64748b;">Delivery Fee: <strong style="color:#16a34a;">${data.delivery_fee === 0 ? 'FREE' : '₹' + formatCurrency(data.delivery_fee)}</strong></p>
+                        ${data.discount > 0 ? `<p style="margin:5px 0; font-size:14px; font-weight:600; color:#64748b;">Coupon Discount: <strong style="color:#a855f7;">-₹${formatCurrency(data.discount)}</strong></p>` : ''}
                         <p style="margin-top:20px; font-size:18px; color:#0f172a; border-top:2px solid #f1f5f9; padding-top:12px; font-weight:800;">
-                            ${data.payment_method === 'COD' ? 'Amount to Pay:' : 'Total Amount Paid:'} ₹${data.total}
+                            ${data.payment_method === 'COD' ? 'Amount to Pay:' : 'Total Amount Paid:'} ₹${formatCurrency(data.total)}
                         </p>
                     </div>
                     <div>
@@ -1454,7 +1464,7 @@ function dismissToast(toast) {
                         <div onclick="sendQuickAction('${o.order_id}')" style="background:white; border:1.5px solid #f1f5f9; padding:12px; border-radius:16px; cursor:pointer; transition:0.2s; display:flex; justify-content:space-between; align-items:center;" onmouseover="this.style.borderColor='var(--green)';this.style.background='#f0fdf4'" onmouseout="this.style.borderColor='#f1f5f9';this.style.background='white'">
                             <div>
                                 <div style="font-size:13px; font-weight:800; color:#1e293b; font-family:monospace;">#${o.order_id}</div>
-                                <div style="font-size:11px; color:#64748b; font-weight:600;">₹${o.total_price} • ${new Date(o.created_at).toLocaleDateString()}</div>
+                                <div style="font-size:11px; color:#64748b; font-weight:600;">₹${formatCurrency(o.total_price)} • ${new Date(o.created_at).toLocaleDateString()}</div>
                             </div>
                             <div style="font-size:11px; font-weight:800; color:var(--green); text-transform:uppercase;">${o.status}</div>
                         </div>
@@ -1513,7 +1523,7 @@ function dismissToast(toast) {
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
                         <div>
                             <div style="font-size:14px; font-weight:800; color:#1e293b; font-family:monospace; letter-spacing:0.5px;">#${o.order_id}</div>
-                            <div style="font-size:12px; color:#64748b; font-weight:600; margin-top:2px;">₹${totalPrice} • ${orderDate}</div>
+                            <div style="font-size:12px; color:#64748b; font-weight:600; margin-top:2px;">₹${formatCurrency(totalPrice)} • ${orderDate}</div>
                         </div>
                         <div style="font-size:10px; font-weight:800; color:var(--green); background:var(--success-bg); padding:6px 10px; border-radius:100px; text-transform:uppercase; letter-spacing:0.5px;">
                             ${o.status.replace(/_/g,' ')}
@@ -1524,25 +1534,25 @@ function dismissToast(toast) {
                     <div style="border-top:1px dashed #f1f5f9; padding-top:15px; margin-top:15px;">
                         <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:12px; color:#64748b; font-weight:600;">
                             <span>Item Total</span>
-                            <span>₹${o.item_total}</span>
+                            <span>₹${formatCurrency(o.item_total)}</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:12px; color:#64748b; font-weight:600;">
                             <span>Delivery Fee</span>
                             <span style="color:${o.delivery_fee == 0 ? '#16a34a' : '#64748b'}; font-weight:700;">
-                                ${o.delivery_fee == 0 ? 'FREE' : '₹' + o.delivery_fee}
+                                ${o.delivery_fee == 0 ? 'FREE' : '₹' + formatCurrency(o.delivery_fee)}
                             </span>
                         </div>
                         ${o.discount > 0 ? `
                         <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:12px; color:#a855f7; font-weight:600;">
                             <span>Coupon Discount</span>
-                            <span>-₹${o.discount}</span>
+                            <span>-₹${formatCurrency(o.discount)}</span>
                         </div>
                         ` : ''}
                         <div style="display:flex; justify-content:space-between; margin-top:10px; padding-top:8px; border-top:1px solid #f8fafc; font-size:14px; color:#1e293b; font-weight:800;">
                             <span>
                                 ${o.payment_status === 'paid' ? 'Amount Paid' : (o.payment_method === 'COD' ? 'Payable on Delivery' : 'Total Amount')}
                             </span>
-                            <span>₹${totalPrice}</span>
+                            <span>₹${formatCurrency(totalPrice)}</span>
                         </div>
                     </div>
 
@@ -1600,8 +1610,8 @@ function dismissToast(toast) {
                                 </a>
                                 <div style="font-size:11px; color:#94a3b8; font-weight:600; margin-bottom:6px;">${p.category} • ${p.unit}</div>
                                 <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
-                                    <span style="font-size:15px; font-weight:800; color:#1e293b;">₹${p.price}</span>
-                                    ${p.mrp_price ? `<span style="font-size:11px; color:#94a3b8; text-decoration:line-through;">₹${p.mrp_price}</span>` : ''}
+                                    <span style="font-size:15px; font-weight:800; color:#1e293b;">₹${formatCurrency(p.price)}</span>
+                                    ${p.mrp_price ? `<span style="font-size:11px; color:#94a3b8; text-decoration:line-through;">₹${formatCurrency(p.mrp_price)}</span>` : ''}
                                     ${discount > 0 ? `<span style="font-size:10px; font-weight:800; color:#10b981; background:#ecfdf5; padding:2px 6px; border-radius:6px;">${discount}% OFF</span>` : ''}
                                 </div>
                                 <div style="display:flex; align-items:center; justify-content:space-between;">

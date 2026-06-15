@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load currency_filters %}
 {% block content %}
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <style>
@@ -112,7 +113,7 @@
                         </div>
                         <button type="button" id="place-order-btn" class="btn-primary-large" style="margin-top: 24px;" onclick="handlePlaceOrder()">
                             <span>Place Order</span>
-                            <span>₹{{ cart.get_final_total }}</span>
+                            <span>₹{{ cart.get_final_total|format_price }}</span>
                         </button>
                     </div>
                 </div>
@@ -127,7 +128,7 @@
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px dashed var(--border-color); font-weight: 800; font-size: 18px; color: var(--text-main);">
                         <span id="final-pay-label">Total Pay</span>
-                        <span>₹{{ cart.get_final_total }}</span>
+                        <span>₹{{ cart.get_final_total|format_price }}</span>
                     </div>
                 </div>
             </div>
@@ -311,27 +312,31 @@
             return;
         }
 
-        const response = await fetch(
-            "/orders/api/create-razorpay-order/",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": getCSRFToken()
-                },
-                body: JSON.stringify({
-                    amount: totalAmount,
-                    address_id: addressId
-                })
+        try {
+            const response = await fetch(
+                "/orders/api/create-razorpay-order/",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        amount: totalAmount,
+                        address_id: addressId
+                    })
+                }
+            )
+
+            const data = await response.json()
+
+            if (!data.success) {
+                console.error("Backend Razorpay Error:", data.error);
+                showToastMsg(data.error || "Unable to start payment. Please check backend logs.", "error");
+                return;
             }
-        )
 
-        const data = await response.json()
-
-        if (!data.success) {
-            showToastMsg("Unable to start payment", "error")
-            return
-        }
+            const phoneText = document.getElementById(`addr-card-${addressId}`).querySelector('.addr-phone').textContent.trim();
 
         const options = {
             key: data.key,
@@ -344,34 +349,13 @@
             prefill: {
                 name: "{{ request.user.get_full_name }}",
                 email: "{{ request.user.email }}",
-                contact: "" 
+                contact: phoneText
             },
             notes: {
                 source: "grodiur_checkout"
             },
             theme: {
                 color: "#16a34a"
-            },
-            method: {
-                upi: true
-            },
-            config: {
-                display: {
-                    blocks: {
-                        upi: {
-                            name: "Pay using UPI",
-                            instruments: [
-                                {
-                                    method: "upi"
-                                }
-                            ]
-                        }
-                    },
-                    sequence: ["block.upi"],
-                    preferences: {
-                        show_default_blocks: false
-                    }
-                }
             },
             handler: async function (response) {
                 console.log("PAYMENT SUCCESS:", response)
@@ -409,8 +393,16 @@
             }
         }
 
-        const rzp = new Razorpay(options)
-        rzp.open()
+        const rzp = new Razorpay(options);
+        rzp.on('payment.failed', function (response){
+            console.error("Payment Failed:", response.error);
+            showToastMsg(`Payment failed: ${response.error.description}`, "error");
+        });
+        rzp.open();
+    } catch (fetchError) {
+        console.error("Network or Fetch Error:", fetchError);
+        showToastMsg("Network error. Could not connect to server.", "error");
     }
+}
 </script>
 {% endblock %}

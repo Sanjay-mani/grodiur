@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load currency_filters %}
 {% block content %}
 
 <style>
@@ -21,7 +22,7 @@
     .qty-btn:hover { background: rgba(0,0,0,0.1); }
     .qty-val { width: 32px; text-align: center; font-size: 14px; }
     
-    .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 14px; color: var(--text-sec); }
+    .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 14px; color: var(--text-sec); font-weight: 500; }
     .summary-total { display: flex; justify-content: space-between; align-items: center; padding: 16px 0 0; margin-top: 16px; border-top: 1px dashed var(--border-color); font-weight: 800; font-size: 18px; color: var(--text-main); }
     
     .coupon-box { display: flex; gap: 8px; }
@@ -57,7 +58,7 @@
             </span>
         </h3>
     </div>
-
+ 
     <div class="cart-grid">
         <div>
             <div class="section-card">
@@ -66,7 +67,7 @@
                     {% if cart.get_delivery_fee == 0 %}
                     Free delivery applied · <span id="header-total-products">{{ cart.get_total_products }}</span> products
                     {% else %}
-                    Add ₹{{ cart.amount_needed_for_free_delivery }} more for FREE delivery 🚚
+                    Add ₹{{ cart.amount_needed_for_free_delivery|format_price }} more for FREE delivery 🚚
                     {% endif %}
                 </div>
                 
@@ -101,9 +102,9 @@
                             </div>
                             
                             <div style="text-align: right;">
-                                <div style="font-weight: 800; font-size: 16px; color: var(--text-main);">₹<span id="subtotal-{{ item.id }}">{{ item.get_subtotal }}</span></div>
+                                <div style="font-weight: 800; font-size: 16px; color: var(--text-main);">₹<span id="subtotal-{{ item.id }}">{{ item.get_subtotal|format_price }}</span></div>
                                 {% if item.product.mrp_price > item.product.price %}
-                                <div style="font-size: 12px; color: var(--text-sec); text-decoration: line-through;">₹<span id="mrp-subtotal-{{ item.id }}">{{ item.get_mrp_subtotal }}</span></div>
+                                <div style="font-size: 12px; color: var(--text-sec); text-decoration: line-through;">₹<span id="mrp-subtotal-{{ item.id }}">{{ item.get_mrp_subtotal|format_price }}</span></div>
                                 {% endif %}
                             </div>
                         </div>
@@ -112,37 +113,37 @@
                 </div>
             </div>
         </div>
-
+ 
         <div>
             <div class="section-card" style="padding: 24px;">
                 <h6 style="margin-top: 0; margin-bottom: 20px; font-size: 16px; font-weight: 800; color: var(--text-main);">Bill Summary</h6>
                 
                 <div class="summary-row">
                     <span>MRP Total</span>
-                    <span>₹<span id="summary-mrp">{{ cart.get_total_mrp|floatformat:2 }}</span></span>
+                    <span>₹<span id="summary-mrp">{{ cart.get_total_mrp|format_price }}</span></span>
                 </div>
                 <div class="summary-row" style="color: #16a34a;">
                     <span>Product Discount</span>
-                    <span style="font-weight: 600;">-₹<span id="summary-discount">{{ cart.get_discount|floatformat:2 }}</span></span>
+                    <span style="font-weight: 600;">-₹<span id="summary-discount">{{ cart.get_discount|format_price }}</span></span>
                 </div>
                 <div class="summary-row" id="coupon-row" style="color: #a855f7; display: {% if cart.coupon %}flex{% else %}none{% endif %};">
                     <span>Coupon Discount (<span id="applied-code-label">{% if cart.coupon %}{{ cart.coupon.code }}{% endif %}</span>)</span>
-                    <span style="font-weight: 600;">-₹<span id="summary-coupon-discount">{{ cart.get_coupon_discount|floatformat:2 }}</span></span>
+                    <span style="font-weight: 600;">-₹<span id="summary-coupon-discount">{{ cart.get_coupon_discount|format_price }}</span></span>
                 </div>
                 <div class="summary-row">
                     <span>Delivery Fee</span>
-                    <span id="summary-delivery" style="color: #16a34a; font-weight: 600;">{% if cart.get_delivery_fee == 0 %}FREE{% else %}₹{{ cart.get_delivery_fee }}{% endif %}</span>
+                    <span id="summary-delivery" style="color: #16a34a; font-weight: 600;">{% if cart.get_delivery_fee == 0 %}FREE{% else %}₹{{ cart.get_delivery_fee|format_price }}{% endif %}</span>
                 </div>
                 
                 <div class="summary-total">
                     <span>Grand Total</span>
-                    <span>₹<span id="summary-final-total">{{ cart.get_final_total|floatformat:2 }}</span></span>
+                    <span>₹<span id="summary-final-total">{{ cart.get_final_total|format_price }}</span></span>
                 </div>
                 
                 <div class="savings-badge" id="savings-box" style="display: {% if cart.get_total_savings > 0 %}flex{% else %}none{% endif %};">
-                    🥳 You're saving ₹<span id="val-savings">{{ cart.get_total_savings|floatformat:2 }}</span> on this order!
+                    🥳 You're saving ₹<span id="val-savings">{{ cart.get_total_savings|format_price }}</span> on this order!
                 </div>
-
+ 
                 <div class="mt-4">
                     <h6 style="font-size: 13px; font-weight: 700; color: var(--text-sec); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Avail Offers & Coupons</h6>
                     <div class="coupon-box">
@@ -161,10 +162,10 @@
                         <a class="avail-coupon" onclick="fillCoupon('NEW100')">NEW100 → ₹100 OFF first order</a>
                     </div>
                 </div>
-
+ 
                 <a href="{% url 'checkout' %}" class="checkout-btn">
                     <span>Checkout →</span>
-                    <span>₹<span id="btn-final-total">{{ cart.get_final_total|floatformat:2 }}</span></span>
+                    <span>₹<span id="btn-final-total">{{ cart.get_final_total|format_price }}</span></span>
                 </a>
             </div>
         </div>
@@ -180,7 +181,7 @@
         return isNaN(n) ? 0 : n;
     };
 
-    const formatPrice = (v) => `₹${parseNum(v).toFixed(2)}`;
+    const formatPrice = (v) => `₹${formatCurrency(parseNum(v))}`;
 
     function syncToLocalStorage(data) {
         localStorage.setItem("cart_count", data.total_items || 0);
@@ -217,8 +218,8 @@
                 // Update row subtotal
                 const subEl = row.querySelector(`[id^="subtotal-"]`);
                 const mrpSubEl = row.querySelector(`[id^="mrp-subtotal-"]`);
-                if (subEl) subEl.textContent = (price * qty).toFixed(2);
-                if (mrpSubEl) mrpSubEl.textContent = (mrp * qty).toFixed(2);
+                if (subEl) subEl.textContent = formatCurrency(price * qty);
+                if (mrpSubEl) mrpSubEl.textContent = formatCurrency(mrp * qty);
             }
         });
 
@@ -239,7 +240,7 @@
         couponDiscount = Math.min(couponDiscount, sellingPriceTotal);
 
         // 4. Delivery Fee (Rule: FREE above 199)
-        const deliveryFee = sellingPriceTotal >= 199 ? 0 : 40;
+        const deliveryFee = sellingPriceTotal >= 199 ? 0 : 1;
 
         // 5. Grand Total
         const grandTotal = Math.max(sellingPriceTotal - couponDiscount + deliveryFee, 0);
@@ -276,11 +277,11 @@
             headerItems: document.getElementById('header-total-items')
         };
 
-        if (elements.mrp) elements.mrp.textContent = parseNum(data.mrp_total).toFixed(2);
-        if (elements.disc) elements.disc.textContent = parseNum(data.discount).toFixed(2);
-        if (elements.coupon) elements.coupon.textContent = parseNum(data.coupon_discount).toFixed(2);
-        if (elements.final) elements.final.textContent = parseNum(data.final_total).toFixed(2);
-        if (elements.btnFinal) elements.btnFinal.textContent = parseNum(data.final_total).toFixed(2);
+        if (elements.mrp) elements.mrp.textContent = formatCurrency(data.mrp_total);
+        if (elements.disc) elements.disc.textContent = formatCurrency(data.discount);
+        if (elements.coupon) elements.coupon.textContent = formatCurrency(data.coupon_discount);
+        if (elements.final) elements.final.textContent = formatCurrency(data.final_total);
+        if (elements.btnFinal) elements.btnFinal.textContent = formatCurrency(data.final_total);
         if (elements.headerItems) elements.headerItems.textContent = data.total_items;
 
         // Coupon Row Visibility
@@ -295,7 +296,7 @@
         const deliveryFee = parseNum(data.delivery_fee);
 
         if (delEl) {
-            delEl.textContent = deliveryFee === 0 ? 'FREE' : '₹' + deliveryFee.toFixed(2);
+            delEl.textContent = deliveryFee === 0 ? 'FREE' : '₹' + formatCurrency(deliveryFee);
             delEl.style.color = deliveryFee === 0 ? '#16a34a' : '#64748b';
         }
 
@@ -315,7 +316,7 @@
             const savings = parseNum(data.total_savings);
             if (savings > 0) {
                 savingsBox.style.display = 'flex';
-                if (elements.savings) elements.savings.textContent = savings.toFixed(2);
+                if (elements.savings) elements.savings.textContent = formatCurrency(savings);
             } else {
                 savingsBox.style.display = 'none';
             }

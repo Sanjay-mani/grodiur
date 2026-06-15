@@ -49,7 +49,7 @@ class Cart(models.Model):
     def get_delivery_fee(self):
         if self.get_item_total() >= 199:
             return 0
-        return 40
+        return 1
 
     def get_final_total(self):
         return self.get_item_total() - self.get_coupon_discount() + self.get_delivery_fee()

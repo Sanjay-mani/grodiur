@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load currency_filters %}
 {% block content %}
 
 <!-- Confetti Canvas -->
@@ -175,7 +176,7 @@
             <span class="summary-label" style="color: #0f172a; font-size: 15px;">
                 {% if order.payment_method == 'COD' %}Amount Payable on Delivery (COD PENDING){% else %}Amount Paid{% endif %}
             </span>
-            <span class="summary-value" style="color: var(--success-green); font-size: 18px;">₹{{ order.total_price }}</span>
+            <span class="summary-value" style="color: var(--success-green); font-size: 18px;">₹{{ order.total_price|format_price }}</span>
         </div>
     </div>
 
