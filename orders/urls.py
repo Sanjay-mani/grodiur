@@ -8,7 +8,7 @@ urlpatterns = [
     path('again/<str:order_id>/', views.order_again, name='order_again'),
     path('<str:order_id>/invoice/', views.order_invoice, name='order_invoice'),
     path('<str:order_id>/support/', views.submit_support_ticket, name='submit_support_ticket'),
-    path('<str:order_id>/', views.order_detail, name='order_detail'),
+
     
     # API
     path('api/orders', views.api_orders, name='api_orders'),
@@ -19,4 +19,5 @@ urlpatterns = [
     path('payment-success/', views.payment_success, name='payment_success'),
     path('razorpay-webhook/', views.razorpay_webhook, name='razorpay_webhook'),
     path('success/', views.latest_order_success, name='order_success_latest'),
+    path('<str:order_id>/', views.order_detail, name='order_detail'),
 ]
